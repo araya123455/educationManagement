@@ -944,52 +944,73 @@ app.get("/selecttest", (req, res) => {
     });
   });
 });
-// tested
 app.get("/selecttested", (req, res) => {
-  const { stu_id } = req.query; // Use query instead of body for GET requests
-  console.log("stu_id", stu_id);
-  // First query to get kinder_id and yearterm_id based on stu_id
-  const selectClassQuery = `SELECT kinder_id, yearterm_id FROM class WHERE stu_id = ${stu_id}`;
+  const { stu_id } = req.query;
 
-  con.query(selectClassQuery, function (err, classResult) {
+  // Use parameterized queries to prevent SQL injection
+  const selectClassQuery = `SELECT kinder_id, yearterm_id FROM class WHERE stu_id = ?`;
+
+  con.query(selectClassQuery, [stu_id], function (err, classResult) {
     if (err) {
       console.error(err);
       return res.status(500).json({ message: "An error occurred" });
     }
 
-    // Extracting kinder_id and yearterm_id from the classResult
+    if (classResult.length === 0) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
     const kinder_id = classResult[0].kinder_id;
     const yearterm_id = classResult[0].yearterm_id;
 
-    // Second query to get test_id values based on kinder_id and yearterm_id
-    const selectTestQuery = `SELECT test_id FROM testdetail WHERE kinder_id = ${kinder_id} AND yearterm_id = ${yearterm_id} AND test_status = 1`;
+    const selectTestQuery = `
+      SELECT test_id
+      FROM testdetail
+      WHERE kinder_id = ? AND yearterm_id = ? AND test_status = 1
+    `;
 
-    con.query(selectTestQuery, function (err, testResult) {
+    con.query(selectTestQuery, [kinder_id, yearterm_id], function (err, testResult) {
       if (err) {
         console.error(err);
         return res.status(500).json({ message: "An error occurred" });
       }
-      // Extracting test_id values from the testResult
+
+      if (testResult.length === 0) {
+        return res.status(404).json({ message: "No tests found" });
+      }
+
       const test_id = testResult[0].test_id;
-      console.log(test_id);
-      const selecttest = `SELECT test_id FROM testresult WHERE test_id != ${test_id} AND stu_id != ${stu_id}`;
-      con.query(selecttest, function (err, testresult) {
-        console.log(testResult);
+
+      const selectTestResultQuery = `
+        SELECT test_id
+        FROM testresult
+        WHERE test_id != ? AND stu_id != ?
+      `;
+
+      con.query(selectTestResultQuery, [test_id, stu_id], function (err, testresult) {
         if (err) {
           console.error(err);
           return res.status(500).json({ message: "An error occurred" });
         }
-        const testIds = testresult.map((result) => result.test_id);
-        // Third query to get questions based on multiple test_id values using IN clause
-        const selectQuestionsQuery = `SELECT test_id, test_detail FROM test WHERE test_id IN (${testIds.join(
-          ","
-        )})`;
 
-        con.query(selectQuestionsQuery, function (err, questionResult) {
+        const testIds = testresult.map((result) => result.test_id);
+
+        if (testIds.length === 0) {
+          return res.status(404).json({ message: "No matching test results found" });
+        }
+
+        const selectQuestionsQuery = `
+          SELECT test_id, test_detail
+          FROM test
+          WHERE test_id IN (?)
+        `;
+
+        con.query(selectQuestionsQuery, [testIds], function (err, questionResult) {
           if (err) {
             console.error(err);
             return res.status(500).json({ message: "An error occurred" });
           }
+
           console.log("Result: ", questionResult);
           res.send(questionResult);
         });
@@ -997,6 +1018,7 @@ app.get("/selecttested", (req, res) => {
     });
   });
 });
+
 // selectquestion
 app.get("/showquestion", (req, res) => {
   const { test_id } = req.query;
