@@ -2,7 +2,13 @@ var bodyParser = require("body-parser");
 const cors = require("cors");
 const express = require("express");
 const { status } = require("express/lib/response");
+const uploadRouter = require("./src/routers/upload_router");
+const uploadFileRouter = require( "./src/routers/uploadfile_router" );
+const uploadlinksRouter = require("./src/routers/uploadlinkvideo_router")
+const fs = require('fs');
+const path = require('path');
 const app = express();
+
 app.use(cors());
 const object = { message: "Hello world", status_: 400 };
 // parse application/x-www-form-urlencoded
@@ -16,7 +22,7 @@ var mysql = require("mysql");
 var con = mysql.createConnection({
   host: "localhost",
   user: "root",
-  database: "educationmanagement",
+  database: "educationmanagment",
   // password: "yourpassword"
 });
 
@@ -726,6 +732,26 @@ app.post("/savetestresultdetail", (req, res) => {
     }
   );
 });
+//---------Video----------
+app.post("/upload/video_links", (req, res) => {
+  const { video_detail, video_link, cont_id } = req.body;
+  const sql = `INSERT INTO learningmaterialsvideo (video_detail, video_link, cont_id) VALUES ( ? , ?, ? )`;
+  con.query(sql, [video_detail, video_link, cont_id], function (err, result) {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "An error occurred" });
+    }
+
+    console.log("1 record inserted");
+    const newRecord = {
+      video_detail, video_link, cont_id
+    };
+    res
+      .status(200)
+      .json({ message: "Successfully added a new learningmaterialsvideo", data: newRecord });
+  });
+});
+
 app.get("/yearterm", (req, res) => {
   const sql = "select * from schoolyearterm";
   con.query(sql, function (err, result) {
@@ -1088,6 +1114,50 @@ app.get("/selectedtest", (req, res) => {
     res.send(testresult);
   });
 });
+app.get("/learningvideo", (req, res) => {
+  const sql = "select * from learningmaterialsvideo where cont_id" ;
+  con.query(sql, function (err, result) {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "An error!!" });
+    }
+    res.send(result);
+  });
+})
+
+//------File PDF--------
+app.get('/learningFilePdf', (req, res) =>  {
+  const pdfFilePath = 'uploadFile';
+  const pdfStream = fs.createReadStream(pdfFilePath);
+  pdfStream.pipe(res);
+});
+
+const pdfDirectory = path.join(__dirname, './public/upload/file_pdf/'); 
+
+app.use('/pdf', express.static(pdfDirectory));
+
+app.get('/pdf', (req, res) => {
+  fs.readdir(pdfDirectory, (err, files) => {
+    
+    if (err) {
+      return res.status(500).send('Error reading directory');
+    }
+    const pdfFiles = files.filter(file => path.extname(file) === '.pdf');
+    console.log("logfile", pdfFiles)
+    if (pdfFiles.length === 0) {
+      return res.status(404).send('No PDF files found');
+    }
+    const pdfUrls = pdfFiles.map(file => {
+      return {
+        url: `/pdf/${file}`,   
+        name: file,            
+      };
+    });
+    res.status(200).json(pdfUrls);
+  });
+});
+
+
 
 app.delete("/yeartermdelete/:id", (req, res) => {
   const yearTerm_id = req.params.id;
