@@ -1138,12 +1138,10 @@ app.use('/pdf', express.static(pdfDirectory));
 
 app.get('/pdf', (req, res) => {
   fs.readdir(pdfDirectory, (err, files) => {
-    
     if (err) {
       return res.status(500).send('Error reading directory');
     }
     const pdfFiles = files.filter(file => path.extname(file) === '.pdf');
-    console.log("logfile", pdfFiles)
     if (pdfFiles.length === 0) {
       return res.status(404).send('No PDF files found');
     }
@@ -1156,6 +1154,7 @@ app.get('/pdf', (req, res) => {
     res.status(200).json(pdfUrls);
   });
 });
+//--------------------------------------
 
 app.delete("/yeartermdelete/:id", (req, res) => {
   const yearTerm_id = req.params.id;
