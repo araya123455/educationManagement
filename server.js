@@ -3,10 +3,10 @@ const cors = require("cors");
 const express = require("express");
 const { status } = require("express/lib/response");
 const uploadRouter = require("./src/routers/upload_router");
-const uploadFileRouter = require( "./src/routers/uploadfile_router" );
-const uploadlinksRouter = require("./src/routers/uploadlinkvideo_router")
-const fs = require('fs');
-const path = require('path');
+const uploadFileRouter = require("./src/routers/uploadfile_router");
+const uploadlinksRouter = require("./src/routers/uploadlinkvideo_router");
+const fs = require("fs");
+const path = require("path");
 const app = express();
 
 app.use(cors());
@@ -22,7 +22,7 @@ var mysql = require("mysql");
 var con = mysql.createConnection({
   host: "localhost",
   user: "root",
-  database: "educationmanagment",
+  database: "educationmanagement",
   // password: "yourpassword"
 });
 
@@ -744,11 +744,14 @@ app.post("/upload/video_links", (req, res) => {
 
     console.log("1 record inserted");
     const newRecord = {
-      video_detail, video_link, cont_id
+      video_detail,
+      video_link,
+      cont_id,
     };
-    res
-      .status(200)
-      .json({ message: "Successfully added a new learningmaterialsvideo", data: newRecord });
+    res.status(200).json({
+      message: "Successfully added a new learningmaterialsvideo",
+      data: newRecord,
+    });
   });
 });
 
@@ -923,8 +926,8 @@ app.get("/question", (req, res) => {
     res.send(result);
   });
 });
-// selecttest
-app.get("/selecttest", (req, res) => {
+// Just show test
+app.get("/selecttestold", (req, res) => {
   const { stu_id } = req.query; // Use query instead of body for GET requests
   console.log("stu_id", stu_id);
   // First query to get kinder_id and yearterm_id based on stu_id
@@ -970,81 +973,135 @@ app.get("/selecttest", (req, res) => {
     });
   });
 });
-app.get("/selecttested", (req, res) => {
+// Show test students haven't taken yet
+app.get("/selecttest", (req, res) => {
   const { stu_id } = req.query;
 
-  // Use parameterized queries to prevent SQL injection
-  const selectClassQuery = `SELECT kinder_id, yearterm_id FROM class WHERE stu_id = ?`;
-
-  con.query(selectClassQuery, [stu_id], function (err, classResult) {
+  // First query to get kinder_id and yearterm_id based on stu_id
+  const selectClassQuery = `SELECT kinder_id, yearterm_id FROM class WHERE stu_id = ${stu_id}`;
+  con.query(selectClassQuery, function (err, classResult) {
     if (err) {
       console.error(err);
       return res.status(500).json({ message: "An error occurred" });
     }
 
     if (classResult.length === 0) {
-      return res.status(404).json({ message: "Student not found" });
+      return res.status(404).json({ message: "No class found for the student" });
     }
 
     const kinder_id = classResult[0].kinder_id;
     const yearterm_id = classResult[0].yearterm_id;
 
-    const selectTestQuery = `
-      SELECT test_id
-      FROM testdetail
-      WHERE kinder_id = ? AND yearterm_id = ? AND test_status = 1
-    `;
-
-    con.query(selectTestQuery, [kinder_id, yearterm_id], function (err, testResult) {
+    // Second query to get test_id values based on kinder_id and yearterm_id
+    const selectTestQuery = `SELECT test_id FROM testdetail WHERE kinder_id = ${kinder_id} AND yearterm_id = ${yearterm_id} AND test_status = 1`;
+    con.query(selectTestQuery, function (err, testResult) {
       if (err) {
         console.error(err);
         return res.status(500).json({ message: "An error occurred" });
       }
 
-      if (testResult.length === 0) {
-        return res.status(404).json({ message: "No tests found" });
+      const testIds = testResult.map((result) => result.test_id);
+
+      if (testIds.length === 0) {
+        return res.status(404).json({ message: "No tests found for the student" });
       }
 
-      const test_id = testResult[0].test_id;
-
-      const selectTestResultQuery = `
-        SELECT test_id
-        FROM testresult
-        WHERE test_id != ? AND stu_id != ?
-      `;
-
-      con.query(selectTestResultQuery, [test_id, stu_id], function (err, testresult) {
+      // Query to select test_ids that the student already has
+      const selectTestTakenQuery = `SELECT test_id FROM testresult WHERE stu_id = ${stu_id} AND test_id IN (${testIds.join(",")})`;
+      con.query(selectTestTakenQuery, function (err, selectresult) {
         if (err) {
           console.error(err);
           return res.status(500).json({ message: "An error occurred" });
         }
 
-        const testIds = testresult.map((result) => result.test_id);
+        const takenTestIds = selectresult.map((result) => result.test_id);
 
-        if (testIds.length === 0) {
-          return res.status(404).json({ message: "No matching test results found" });
+        // Filter out test_ids that the student already has
+        const availableTestIds = testIds.filter((testId) => !takenTestIds.includes(testId));
+
+        if (availableTestIds.length === 0) {
+          return res.status(404).json({ message: "No available tests for the student" });
         }
 
-        const selectQuestionsQuery = `
-          SELECT test_id, test_detail
-          FROM test
-          WHERE test_id IN (?)
-        `;
+        // Third query to get questions based on available test_id values using IN clause
+        const selectQuestionsQuery = `SELECT test_id, test_detail FROM test WHERE test_id IN (${availableTestIds.join(",")})`;
 
-        con.query(selectQuestionsQuery, [testIds], function (err, questionResult) {
+        con.query(selectQuestionsQuery, function (err, questionResult) {
           if (err) {
             console.error(err);
             return res.status(500).json({ message: "An error occurred" });
           }
-
-          console.log("Result: ", questionResult);
+          console.log(questionResult);
           res.send(questionResult);
         });
       });
     });
   });
 });
+// Already have score
+app.get("/finishedtest", (req, res) => {
+  const { stu_id } = req.query;
+  // First query to get kinder_id and yearterm_id based on stu_id
+  const selectClassQuery = `SELECT kinder_id, yearterm_id FROM class WHERE stu_id = ${stu_id}`;
+  con.query(selectClassQuery, function (err, classResult) {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "An error occurred" });
+    }
 
+    if (classResult.length === 0) {
+      return res.status(404).json({ message: "No class found for the student" });
+    }
+
+    const kinder_id = classResult[0].kinder_id;
+    const yearterm_id = classResult[0].yearterm_id;
+
+    // Second query to get test_id values based on kinder_id and yearterm_id
+    const selectTestQuery = `SELECT test_id FROM testdetail WHERE kinder_id = ${kinder_id} AND yearterm_id = ${yearterm_id} AND test_status = 1`;
+    con.query(selectTestQuery, function (err, testResult) {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ message: "An error occurred" });
+      }
+
+      const testIds = testResult.map((result) => result.test_id);
+
+      if (testIds.length === 0) {
+        return res.status(404).json({ message: "No tests found for the student" });
+      }
+
+      // Query to select test_ids that the student already has
+      const selectTestTakenQuery = `SELECT test_id FROM testresult WHERE stu_id = ${stu_id} AND test_id IN (${testIds.join(",")})`;
+      con.query(selectTestTakenQuery, function (err, selectresult) {
+        if (err) {
+          console.error(err);
+          return res.status(500).json({ message: "An error occurred" });
+        }
+
+        const takenTestIds = selectresult.map((result) => result.test_id);
+
+        // Filter out test_ids that the student already has
+        const availableTestIds = testIds.filter((testId) => takenTestIds.includes(testId));
+
+        if (availableTestIds.length === 0) {
+          return res.status(404).json({ message: "No available tests for the student" });
+        }
+
+        // Third query to get questions based on available test_id values using IN clause
+        const selectQuestionsQuery = `SELECT test_id, test_detail FROM test WHERE test_id IN (${availableTestIds.join(",")})`;
+
+        con.query(selectQuestionsQuery, function (err, questionResult) {
+          if (err) {
+            console.error(err);
+            return res.status(500).json({ message: "An error occurred" });
+          }
+          console.log(questionResult);
+          res.send(questionResult);
+        });
+      });
+    });
+  });
+});
 // selectquestion
 app.get("/showquestion", (req, res) => {
   const { test_id } = req.query;
@@ -1115,7 +1172,7 @@ app.get("/selectedtest", (req, res) => {
   });
 });
 app.get("/learningvideo", (req, res) => {
-  const sql = "select * from learningmaterialsvideo where cont_id" ;
+  const sql = "select * from learningmaterialsvideo where cont_id";
   con.query(sql, function (err, result) {
     if (err) {
       console.error(err);
@@ -1123,32 +1180,33 @@ app.get("/learningvideo", (req, res) => {
     }
     res.send(result);
   });
-})
+});
 
 //------File PDF--------
-app.get('/learningFilePdf', (req, res) =>  {
-  const pdfFilePath = 'uploadFile';
+app.get("/learningFilePdf", (req, res) => {
+  const pdfFilePath = "uploadFile";
   const pdfStream = fs.createReadStream(pdfFilePath);
   pdfStream.pipe(res);
 });
 
-const pdfDirectory = path.join(__dirname, './public/upload/file_pdf/'); 
+const pdfDirectory = path.join(__dirname, "./public/upload/file_pdf/");
 
-app.use('/pdf', express.static(pdfDirectory));
+app.use("/pdf", express.static(pdfDirectory));
 
-app.get('/pdf', (req, res) => {
+app.get("/pdf", (req, res) => {
   fs.readdir(pdfDirectory, (err, files) => {
     if (err) {
-      return res.status(500).send('Error reading directory');
+      return res.status(500).send("Error reading directory");
     }
     const pdfFiles = files.filter(file => path.extname(file) === '.pdf');
+    console.log("logfile", pdfFiles)
     if (pdfFiles.length === 0) {
-      return res.status(404).send('No PDF files found');
+      return res.status(404).send("No PDF files found");
     }
-    const pdfUrls = pdfFiles.map(file => {
+    const pdfUrls = pdfFiles.map((file) => {
       return {
-        url: `/pdf/${file}`,   
-        name: file,            
+        url: `/pdf/${file}`,
+        name: file,
       };
     });
     res.status(200).json(pdfUrls);
