@@ -1157,8 +1157,6 @@ app.get('/pdf', (req, res) => {
   });
 });
 
-
-
 app.delete("/yeartermdelete/:id", (req, res) => {
   const yearTerm_id = req.params.id;
 
