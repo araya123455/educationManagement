@@ -5,7 +5,7 @@ const { status } = require("express/lib/response");
 const uploadRouter = require("./src/routers/upload_router");
 const uploadFileRouter = require("./src/routers/uploadfile_router");
 const uploadlinksRouter = require("./src/routers/uploadlinkvideo_router");
-const uploadFileAssesmentRouter = require("./src/routers/uploadfilesubject_router");
+// const uploadFileAssesmentRouter = require("./src/routers/uploadfilesubject_router");
 const fs = require("fs");
 const path = require("path");
 const app = express();
@@ -1196,6 +1196,7 @@ app.get("/selectedtest", (req, res) => {
     res.send(testresult);
   });
 });
+//------------------------------
 app.get("/learningvideo", (req, res) => {
   const sql = "select * from learningmaterialsvideo where cont_id";
   con.query(sql, function (err, result) {
@@ -1208,11 +1209,13 @@ app.get("/learningvideo", (req, res) => {
 });
 
 //------File PDF--------
-app.get("/learningFilePdf", (req, res) => {
-  const pdfFilePath = "uploadFile";
-  const pdfStream = fs.createReadStream(pdfFilePath);
-  pdfStream.pipe(res);
-});
+// app.get("/learningFilePdf", (req, res) => {
+//   const pdfFilePath = "uploadFile";
+//   const pdfStream = fs.createReadStream(pdfFilePath);
+//   pdfStream.pipe(res);
+// });
+// app.post("/learningFilePdf",uploadFileRouter)
+app.use("/upload/file_pdf", uploadFileRouter);
 
 const pdfDirectory = path.join(__dirname, "./public/upload/file_pdf/");
 
@@ -1565,6 +1568,11 @@ app.get("/:id", (req, res) => {
 
 app.post("/testpost", (req, res) => {
   console.log("req.body");
+});
+
+//Custom middleware to handle 404 errors
+app.use((req, res, next) => {
+  res.status(404).json({ error: 'Not Found' });
 });
 
 app.listen(3000, () => {
