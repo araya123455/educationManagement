@@ -5,6 +5,7 @@ const { status } = require("express/lib/response");
 const uploadRouter = require("./src/routers/upload_router");
 const uploadFileRouter = require("./src/routers/uploadfile_router");
 const uploadlinksRouter = require("./src/routers/uploadlinkvideo_router");
+const uploadFileAssesmentRouter = require("./src/routers/uploadfilesubject_router");
 const fs = require("fs");
 const path = require("path");
 const app = express();
@@ -1206,6 +1207,36 @@ app.get("/pdf", (req, res) => {
     const pdfUrls = pdfFiles.map((file) => {
       return {
         url: `/pdf/${file}`,
+        name: file,
+      };
+    });
+    res.status(200).json(pdfUrls);
+  });
+});
+//-------File Assessment---------------
+app.get("/AssessmentFilePdf", (req, res) => {
+  const pdfFilePath = "uploadAsses";
+  const pdfStream = fs.createReadStream(pdfFilePath);
+  pdfStream.pipe(res);
+});
+
+const pdfAssesmentDirectory = path.join(__dirname, "./public/upload/assesment/");
+
+app.use("/pdfAsses", express.static(pdfAssesmentDirectory));
+
+app.get("/pdfAsses", (req, res) => {
+  fs.readdir(pdfAssesmentDirectory, (err, files) => {
+    if (err) {
+      return res.status(500).send("Error reading directory");
+    }
+    const pdfFiles = files.filter(file => path.extname(file) === '.pdfAsses');
+    console.log("logfile", pdfFiles)
+    if (pdfFiles.length === 0) {
+      return res.status(404).send("No PDF files found");
+    }
+    const pdfUrls = pdfFiles.map((file) => {
+      return {
+        url: `/pdfAsses/${file}`,
         name: file,
       };
     });

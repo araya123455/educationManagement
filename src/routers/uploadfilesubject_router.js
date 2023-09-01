@@ -1,10 +1,10 @@
 const express = require("express");
 const multer = require("multer");
-const uploadFileRouter = express.Router();
+const uploadFileSubjectRouter = express.Router();
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, "./public/upload/assesment/");
+    cb(null, "./public/upload/subject_contant/");
   },
   filename: (req, file, cb) => {
     // const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
@@ -20,7 +20,7 @@ const fileFilter = (req, file, cb) => {
 }; 
 const upload = multer({ storage });
 
-uploadFileRouter.post("/", upload.single("uploadAsses "), (req, res, next) => {
+uploadFileSubjectRouter.post("/", upload.single("uploadSubject"), (req, res, next) => {
   return res.send( req.file)
   // if (!req.file) {
   //   return res.status(400).json({ message: "No file uploaded." });
@@ -29,4 +29,4 @@ uploadFileRouter.post("/", upload.single("uploadAsses "), (req, res, next) => {
   // return res.status(200) .json({ message: "File uploaded successfully." });
 });
 
-module.exports = uploadFileRouter;
+module.exports = uploadFileSubjectRouter;
