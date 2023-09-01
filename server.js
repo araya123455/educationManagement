@@ -987,7 +987,9 @@ app.get("/selecttest", (req, res) => {
     }
 
     if (classResult.length === 0) {
-      return res.status(404).json({ message: "No class found for the student" });
+      return res
+        .status(404)
+        .json({ message: "No class found for the student" });
     }
 
     const kinder_id = classResult[0].kinder_id;
@@ -1004,11 +1006,15 @@ app.get("/selecttest", (req, res) => {
       const testIds = testResult.map((result) => result.test_id);
 
       if (testIds.length === 0) {
-        return res.status(404).json({ message: "No tests found for the student" });
+        return res
+          .status(404)
+          .json({ message: "No tests found for the student" });
       }
 
       // Query to select test_ids that the student already has
-      const selectTestTakenQuery = `SELECT test_id FROM testresult WHERE stu_id = ${stu_id} AND test_id IN (${testIds.join(",")})`;
+      const selectTestTakenQuery = `SELECT test_id FROM testresult WHERE stu_id = ${stu_id} AND test_id IN (${testIds.join(
+        ","
+      )})`;
       con.query(selectTestTakenQuery, function (err, selectresult) {
         if (err) {
           console.error(err);
@@ -1018,14 +1024,20 @@ app.get("/selecttest", (req, res) => {
         const takenTestIds = selectresult.map((result) => result.test_id);
 
         // Filter out test_ids that the student already has
-        const availableTestIds = testIds.filter((testId) => !takenTestIds.includes(testId));
+        const availableTestIds = testIds.filter(
+          (testId) => !takenTestIds.includes(testId)
+        );
 
         if (availableTestIds.length === 0) {
-          return res.status(404).json({ message: "No available tests for the student" });
+          return res
+            .status(404)
+            .json({ message: "No available tests for the student" });
         }
 
         // Third query to get questions based on available test_id values using IN clause
-        const selectQuestionsQuery = `SELECT test_id, test_detail FROM test WHERE test_id IN (${availableTestIds.join(",")})`;
+        const selectQuestionsQuery = `SELECT test_id, test_detail FROM test WHERE test_id IN (${availableTestIds.join(
+          ","
+        )})`;
 
         con.query(selectQuestionsQuery, function (err, questionResult) {
           if (err) {
@@ -1051,7 +1063,9 @@ app.get("/finishedtest", (req, res) => {
     }
 
     if (classResult.length === 0) {
-      return res.status(404).json({ message: "No class found for the student" });
+      return res
+        .status(404)
+        .json({ message: "No class found for the student" });
     }
 
     const kinder_id = classResult[0].kinder_id;
@@ -1068,11 +1082,15 @@ app.get("/finishedtest", (req, res) => {
       const testIds = testResult.map((result) => result.test_id);
 
       if (testIds.length === 0) {
-        return res.status(404).json({ message: "No tests found for the student" });
+        return res
+          .status(404)
+          .json({ message: "No tests found for the student" });
       }
 
       // Query to select test_ids that the student already has
-      const selectTestTakenQuery = `SELECT test_id FROM testresult WHERE stu_id = ${stu_id} AND test_id IN (${testIds.join(",")})`;
+      const selectTestTakenQuery = `SELECT test_id FROM testresult WHERE stu_id = ${stu_id} AND test_id IN (${testIds.join(
+        ","
+      )})`;
       con.query(selectTestTakenQuery, function (err, selectresult) {
         if (err) {
           console.error(err);
@@ -1082,14 +1100,20 @@ app.get("/finishedtest", (req, res) => {
         const takenTestIds = selectresult.map((result) => result.test_id);
 
         // Filter out test_ids that the student already has
-        const availableTestIds = testIds.filter((testId) => takenTestIds.includes(testId));
+        const availableTestIds = testIds.filter((testId) =>
+          takenTestIds.includes(testId)
+        );
 
         if (availableTestIds.length === 0) {
-          return res.status(404).json({ message: "No available tests for the student" });
+          return res
+            .status(404)
+            .json({ message: "No available tests for the student" });
         }
 
         // Third query to get questions based on available test_id values using IN clause
-        const selectQuestionsQuery = `SELECT test_id, test_detail FROM test WHERE test_id IN (${availableTestIds.join(",")})`;
+        const selectQuestionsQuery = `SELECT test_id, test_detail FROM test WHERE test_id IN (${availableTestIds.join(
+          ","
+        )})`;
 
         con.query(selectQuestionsQuery, function (err, questionResult) {
           if (err) {
@@ -1136,7 +1160,7 @@ app.get("/testresult", (req, res) => {
 });
 app.get("/testresultdetail", (req, res) => {
   const { stu_id, test_id } = req.query;
-  const selectQuestionsQuery = `SELECT ans_result, score, ques_id, stu_id, test_id FROM testresultdetail WHERE test_id = ${test_id} AND stu_id = ${stu_id}`;
+  const selectQuestionsQuery = `SELECT 	testDe_id, ans_result, score, ques_id, stu_id, test_id FROM testresultdetail WHERE test_id = ${test_id} AND stu_id = ${stu_id}`;
 
   con.query(selectQuestionsQuery, function (err, testresult) {
     if (err) {
@@ -1148,7 +1172,7 @@ app.get("/testresultdetail", (req, res) => {
 });
 app.get("/testedresult", (req, res) => {
   const { stu_id, test_id } = req.query;
-  const selectQuestionsQuery = `SELECT stu_id, time_duration, test_id FROM testresult WHERE test_id = ${test_id} AND stu_id = ${stu_id}`;
+  const selectQuestionsQuery = `SELECT testR_id, stu_id, time_duration, test_id FROM testresult WHERE test_id = ${test_id} AND stu_id = ${stu_id}`;
 
   con.query(selectQuestionsQuery, function (err, testedresult) {
     if (err) {
@@ -1199,8 +1223,8 @@ app.get("/pdf", (req, res) => {
     if (err) {
       return res.status(500).send("Error reading directory");
     }
-    const pdfFiles = files.filter(file => path.extname(file) === '.pdf');
-    console.log("logfile", pdfFiles)
+    const pdfFiles = files.filter((file) => path.extname(file) === ".pdf");
+    console.log("logfile", pdfFiles);
     if (pdfFiles.length === 0) {
       return res.status(404).send("No PDF files found");
     }
@@ -1220,7 +1244,10 @@ app.get("/AssessmentFilePdf", (req, res) => {
   pdfStream.pipe(res);
 });
 
-const pdfAssesmentDirectory = path.join(__dirname, "./public/upload/assesment/");
+const pdfAssesmentDirectory = path.join(
+  __dirname,
+  "./public/upload/assesment/"
+);
 
 app.use("/pdfAsses", express.static(pdfAssesmentDirectory));
 
@@ -1229,8 +1256,8 @@ app.get("/pdfAsses", (req, res) => {
     if (err) {
       return res.status(500).send("Error reading directory");
     }
-    const pdfFiles = files.filter(file => path.extname(file) === '.pdfAsses');
-    console.log("logfile", pdfFiles)
+    const pdfFiles = files.filter((file) => path.extname(file) === ".pdfAsses");
+    console.log("logfile", pdfFiles);
     if (pdfFiles.length === 0) {
       return res.status(404).send("No PDF files found");
     }
