@@ -1208,13 +1208,9 @@ app.get("/learningvideo", (req, res) => {
   });
 });
 
+//------irin file pdf---------
 //------File PDF--------
-// app.get("/learningFilePdf", (req, res) => {
-//   const pdfFilePath = "uploadFile";
-//   const pdfStream = fs.createReadStream(pdfFilePath);
-//   pdfStream.pipe(res);
-// });
-// app.post("/learningFilePdf",uploadFileRouter)
+//---------------learning---------------------------
 app.use("/upload/file_pdf", uploadFileRouter);
 
 const pdfDirectory = path.join(__dirname, "./public/upload/file_pdf/");
@@ -1240,41 +1236,111 @@ app.get("/pdf", (req, res) => {
     res.status(200).json(pdfUrls);
   });
 });
-//-------File Assessment---------------
-app.get("/AssessmentFilePdf", (req, res) => {
-  const pdfFilePath = "uploadAsses";
-  const pdfStream = fs.createReadStream(pdfFilePath);
-  pdfStream.pipe(res);
-});
+//-------------English-------------
+app.use("/upload/subject_contant/English", uploadFileRouter);
 
-const pdfAssesmentDirectory = path.join(
-  __dirname,
-  "./public/upload/assesment/"
-);
+const pdfEnglishDirectory = path.join(__dirname, "./public/upload/subject_contant/English/");
 
-app.use("/pdfAsses", express.static(pdfAssesmentDirectory));
+app.use("/pdfEnglish", express.static(pdfEnglishDirectory));
 
-app.get("/pdfAsses", (req, res) => {
-  fs.readdir(pdfAssesmentDirectory, (err, files) => {
+app.get("/pdfEnglish", (req, res) => {
+  fs.readdir(pdfEnglishDirectory, (err, files) => {
     if (err) {
       return res.status(500).send("Error reading directory");
     }
-    const pdfFiles = files.filter((file) => path.extname(file) === ".pdfAsses");
+    const pdfFiles = files.filter((file) => path.extname(file) === ".pdf"); // Change the file extension here
     console.log("logfile", pdfFiles);
     if (pdfFiles.length === 0) {
       return res.status(404).send("No PDF files found");
     }
     const pdfUrls = pdfFiles.map((file) => {
       return {
-        url: `/pdfAsses/${file}`,
+        url: `/pdfEnglish/${file}`,
         name: file,
       };
     });
     res.status(200).json(pdfUrls);
   });
 });
-//--------------------------------------
+//-------------Echance The Experienc-------------
+app.use("/upload/subject_contant/EnhanceTheExperience", uploadFileRouter);
 
+const pdfEnhanceTheExperienceDirectory = path.join(__dirname, "./public/upload/subject_contant/EnhanceTheExperience/");
+
+app.use("/pdfEnhanceTheExperience", express.static(pdfEnhanceTheExperienceDirectory));
+
+app.get("/pdfEnhanceTheExperience", (req, res) => {
+  fs.readdir(pdfEnhanceTheExperienceDirectory, (err, files) => {
+    if (err) {
+      return res.status(500).send("Error reading directory");
+    }
+    const pdfFiles = files.filter((file) => path.extname(file) === ".pdf"); // Change the file extension here
+    console.log("logfile", pdfFiles);
+    if (pdfFiles.length === 0) {
+      return res.status(404).send("No PDF files found");
+    }
+    const pdfUrls = pdfFiles.map((file) => {
+      return {
+        url: `/pdfEnhanceTheExperience/${file}`,
+        name: file,
+      };
+    });
+    res.status(200).json(pdfUrls);
+  });
+});
+//-------------Math-------------
+app.use("/upload/subject_contant/Mathh", uploadFileRouter);
+
+const pdfMathhDirectory = path.join(__dirname, "./public/upload/subject_contant/Mathh/");
+
+app.use("/pdfMathhDirectory", express.static(pdfMathhDirectory));
+
+app.get("/pdfMathhDirectory", (req, res) => {
+  fs.readdir(pdfMathhDirectory, (err, files) => {
+    if (err) {
+      return res.status(500).send("Error reading directory");
+    }
+    const pdfFiles = files.filter((file) => path.extname(file) === ".pdf"); // Change the file extension here
+    console.log("logfile", pdfFiles);
+    if (pdfFiles.length === 0) {
+      return res.status(404).send("No PDF files found");
+    }
+    const pdfUrls = pdfFiles.map((file) => {
+      return {
+        url: `/pdfMathhDirectory/${file}`,
+        name: file,
+      };
+    });
+    res.status(200).json(pdfUrls);
+  });
+});
+//-------------Thai-------------
+app.use("/upload/subject_contant/Thai", uploadFileRouter);
+
+const pdfThaiDirectory = path.join(__dirname, "./public/upload/subject_contant/Thai/");
+
+app.use("/pdfThaiDirectory", express.static(pdfThaiDirectory));
+
+app.get("/pdfThaiDirectory", (req, res) => {
+  fs.readdir(pdfThaiDirectory, (err, files) => {
+    if (err) {
+      return res.status(500).send("Error reading directory");
+    }
+    const pdfFiles = files.filter((file) => path.extname(file) === ".pdf"); // Change the file extension here
+    console.log("logfile", pdfFiles);
+    if (pdfFiles.length === 0) {
+      return res.status(404).send("No PDF files found");
+    }
+    const pdfUrls = pdfFiles.map((file) => {
+      return {
+        url: `/pdfThaiDirectory/${file}`,
+        name: file,
+      };
+    });
+    res.status(200).json(pdfUrls);
+  });
+});
+//--------------------------------------------------------------
 app.delete("/yeartermdelete/:id", (req, res) => {
   const yearTerm_id = req.params.id;
 

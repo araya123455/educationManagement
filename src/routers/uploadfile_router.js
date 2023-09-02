@@ -2,7 +2,6 @@ const express = require("express");
 const multer = require("multer");
 const uploadFileRouter = express.Router();
 
-// Define the storage configuration for multer
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "./public/upload/file_pdf/");
