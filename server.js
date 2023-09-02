@@ -1293,9 +1293,9 @@ app.use("/upload/subject_contant/Mathh", uploadFileRouter);
 
 const pdfMathhDirectory = path.join(__dirname, "./public/upload/subject_contant/Mathh/");
 
-app.use("/pdfMathhDirectory", express.static(pdfMathhDirectory));
+app.use("/pdfMath", express.static(pdfMathhDirectory));
 
-app.get("/pdfMathhDirectory", (req, res) => {
+app.get("/pdfMath", (req, res) => {
   fs.readdir(pdfMathhDirectory, (err, files) => {
     if (err) {
       return res.status(500).send("Error reading directory");
@@ -1307,7 +1307,7 @@ app.get("/pdfMathhDirectory", (req, res) => {
     }
     const pdfUrls = pdfFiles.map((file) => {
       return {
-        url: `/pdfMathhDirectory/${file}`,
+        url: `/pdfMath/${file}`,
         name: file,
       };
     });
@@ -1319,9 +1319,9 @@ app.use("/upload/subject_contant/Thai", uploadFileRouter);
 
 const pdfThaiDirectory = path.join(__dirname, "./public/upload/subject_contant/Thai/");
 
-app.use("/pdfThaiDirectory", express.static(pdfThaiDirectory));
+app.use("/pdfThai", express.static(pdfThaiDirectory));
 
-app.get("/pdfThaiDirectory", (req, res) => {
+app.get("/pdfThai", (req, res) => {
   fs.readdir(pdfThaiDirectory, (err, files) => {
     if (err) {
       return res.status(500).send("Error reading directory");
@@ -1333,7 +1333,7 @@ app.get("/pdfThaiDirectory", (req, res) => {
     }
     const pdfUrls = pdfFiles.map((file) => {
       return {
-        url: `/pdfThaiDirectory/${file}`,
+        url: `/pdfThai/${file}`,
         name: file,
       };
     });
