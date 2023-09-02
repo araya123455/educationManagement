@@ -19,11 +19,12 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 var mysql = require("mysql");
+const { error } = require("console");
 
 var con = mysql.createConnection({
   host: "localhost",
   user: "root",
-  database: "educationmanagment",
+  database: "educationmanagement",
   // password: "yourpassword"
 });
 
@@ -927,10 +928,140 @@ app.get("/question", (req, res) => {
     res.send(result);
   });
 });
+// Show student from testDe_id haven't take tests seperate class
+app.get("/testresultdetatil", (req, res) => {
+  const { testDe_id } = req.query;
+  // First query to get kinder_id and yearterm_id from testdetail
+  const selectTestdetailQuery = `SELECT test_id, kinder_id, yearterm_id FROM testdetail WHERE testDe_id = ${testDe_id}`;
+  con.query(selectTestdetailQuery, function (err, resultdetail) {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "An error occurred" });
+    }
+    // Extracting kinder_id and yearterm_id
+    const kinder_id = resultdetail[0].kinder_id;
+    const yearterm_id = resultdetail[0].yearterm_id;
+    const test_id = resultdetail[0].test_id; 
+
+    // Second query to get stu_id values based on kinder_id and yearterm_id from class
+    const selectClassQuery = `SELECT stu_id FROM class WHERE kinder_id = ${kinder_id} AND yearterm_id = ${yearterm_id}`;
+    con.query(selectClassQuery, function (err, resultclass) {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ message: "An error occurred" });
+      }
+      // Extracting stu_id
+      const stuid = resultclass.map((result) => result.stu_id);
+      if (stuid.length === 0) {
+        return res
+          .status(404)
+          .json({ message: "No available tests for the student" });
+      }
+
+      // Third query to get stu_id (student haven't take class) check with testresultdetail
+      const selectTestdetail = `SELECT stu_id FROM testresultdetail WHERE test_id = ${test_id} AND  stu_id IN (${stuid.join(
+        ","
+      )})`;
+      con.query(selectTestdetail, function (err, resultTestde) {
+        if (err) {
+          console.error(err);
+          return res.status(500).json({ message: "An error occurred" });
+        }
+        // initialization first
+        const takeTestdeId = resultTestde.map((result) => result.stu_id);
+        const availableTestdeId = stuid.filter(
+          (testde) => !takeTestdeId.includes(testde) // id student not already have test
+        );
+        if (availableTestdeId.length === 0) {
+          return res
+            .status(404)
+            .json({ message: "No available tests for the student" });
+        }
+
+        const selectStudentQuery = `SELECT stu_id, prefix, stu_Fname, stu_Lname FROM student WHERE stu_id IN (${availableTestdeId.join(
+          ","
+        )})`;
+        con.query(selectStudentQuery, function (err, resultStudent) {
+          if (err) {
+            console.error(err);
+            return res.status(500).json({ message: "An error occurred" });
+          }
+          res.send(resultStudent);
+        });
+      });
+    });
+  });
+});
+
+// Show student from testDe_id have take tests seperate class
+app.get("/testresultdetatiled", (req, res) => {
+  const { testDe_id } = req.query;
+  // First query to get kinder_id and yearterm_id from testdetail
+  const selectTestdetailQuery = `SELECT test_id, kinder_id, yearterm_id FROM testdetail WHERE testDe_id = ${testDe_id}`;
+  con.query(selectTestdetailQuery, function (err, resultdetail) {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "An error occurred" });
+    }
+    // Extracting kinder_id and yearterm_id
+    const kinder_id = resultdetail[0].kinder_id;
+    const yearterm_id = resultdetail[0].yearterm_id;
+    const test_id = resultdetail[0].test_id; 
+
+    // Second query to get stu_id values based on kinder_id and yearterm_id from class
+    const selectClassQuery = `SELECT stu_id FROM class WHERE kinder_id = ${kinder_id} AND yearterm_id = ${yearterm_id}`;
+    // Get student on this class
+    con.query(selectClassQuery, function (err, resultclass) {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ message: "An error occurred" });
+      }
+      
+      // Extracting stu_id
+      const stuid = resultclass.map((result) => result.stu_id);
+      if (stuid.length === 0) {
+        return res
+          .status(404)
+          .json({ message: "No available tests for the student" });
+      }
+
+      // Third query to get stu_id (student haven't take class) check with testresultdetail
+      const selectTestdetail = `SELECT stu_id FROM testresultdetail WHERE stu_id IN (${stuid.join(
+        ","
+      )})`;
+      con.query(selectTestdetail, function (err, resultTestde) {
+        if (err) {
+          console.error(err);
+          return res.status(500).json({ message: "An error occurred" });
+        }
+        // initialization first
+        const takeTestdeId = resultTestde.map((result) => result.stu_id);
+        const availableTestdeId = stuid.filter((testde) =>
+          takeTestdeId.includes(testde)
+        );
+        if (availableTestdeId.length === 0) {
+          return res
+            .status(404)
+            .json({ message: "No available tests for the student" });
+        }
+
+        const selectStudentQuery = `SELECT stu_id, prefix, stu_Fname, stu_Lname FROM student WHERE stu_id IN (${availableTestdeId.join(
+          ","
+        )})`;
+        con.query(selectStudentQuery, function (err, resultStudent) {
+          if (err) {
+            console.error(err);
+            return res.status(500).json({ message: "An error occurred" });
+          }
+          res.send(resultStudent);
+        });
+      });
+    });
+  });
+});
 // Just show test
 app.get("/selecttestold", (req, res) => {
   const { stu_id } = req.query; // Use query instead of body for GET requests
-  console.log("stu_id", stu_id);
   // First query to get kinder_id and yearterm_id based on stu_id
   const selectClassQuery = `SELECT kinder_id, yearterm_id FROM class WHERE stu_id = ${stu_id}`;
 
@@ -967,8 +1098,6 @@ app.get("/selecttestold", (req, res) => {
           console.error(err);
           return res.status(500).json({ message: "An error occurred" });
         }
-
-        console.log("Result: ", questionResult);
         res.send(questionResult);
       });
     });
@@ -976,7 +1105,7 @@ app.get("/selecttestold", (req, res) => {
 });
 // Show test students haven't taken yet
 app.get("/selecttest", (req, res) => {
-  const { stu_id } = req.query;
+  const { stu_id } = req.query; // Find class student and test
 
   // First query to get kinder_id and yearterm_id based on stu_id
   const selectClassQuery = `SELECT kinder_id, yearterm_id FROM class WHERE stu_id = ${stu_id}`;
@@ -1120,7 +1249,6 @@ app.get("/finishedtest", (req, res) => {
             console.error(err);
             return res.status(500).json({ message: "An error occurred" });
           }
-          console.log(questionResult);
           res.send(questionResult);
         });
       });
@@ -1239,7 +1367,10 @@ app.get("/pdf", (req, res) => {
 //-------------English-------------
 app.use("/upload/subject_contant/English", uploadFileRouter);
 
-const pdfEnglishDirectory = path.join(__dirname, "./public/upload/subject_contant/English/");
+const pdfEnglishDirectory = path.join(
+  __dirname,
+  "./public/upload/subject_contant/English/"
+);
 
 app.use("/pdfEnglish", express.static(pdfEnglishDirectory));
 
@@ -1265,9 +1396,15 @@ app.get("/pdfEnglish", (req, res) => {
 //-------------Echance The Experienc-------------
 app.use("/upload/subject_contant/EnhanceTheExperience", uploadFileRouter);
 
-const pdfEnhanceTheExperienceDirectory = path.join(__dirname, "./public/upload/subject_contant/EnhanceTheExperience/");
+const pdfEnhanceTheExperienceDirectory = path.join(
+  __dirname,
+  "./public/upload/subject_contant/EnhanceTheExperience/"
+);
 
-app.use("/pdfEnhanceTheExperience", express.static(pdfEnhanceTheExperienceDirectory));
+app.use(
+  "/pdfEnhanceTheExperience",
+  express.static(pdfEnhanceTheExperienceDirectory)
+);
 
 app.get("/pdfEnhanceTheExperience", (req, res) => {
   fs.readdir(pdfEnhanceTheExperienceDirectory, (err, files) => {
@@ -1291,7 +1428,10 @@ app.get("/pdfEnhanceTheExperience", (req, res) => {
 //-------------Math-------------
 app.use("/upload/subject_contant/Mathh", uploadFileRouter);
 
-const pdfMathhDirectory = path.join(__dirname, "./public/upload/subject_contant/Mathh/");
+const pdfMathhDirectory = path.join(
+  __dirname,
+  "./public/upload/subject_contant/Mathh/"
+);
 
 app.use("/pdfMath", express.static(pdfMathhDirectory));
 
@@ -1317,7 +1457,10 @@ app.get("/pdfMath", (req, res) => {
 //-------------Thai-------------
 app.use("/upload/subject_contant/Thai", uploadFileRouter);
 
-const pdfThaiDirectory = path.join(__dirname, "./public/upload/subject_contant/Thai/");
+const pdfThaiDirectory = path.join(
+  __dirname,
+  "./public/upload/subject_contant/Thai/"
+);
 
 app.use("/pdfThai", express.static(pdfThaiDirectory));
 
@@ -1638,7 +1781,7 @@ app.post("/testpost", (req, res) => {
 
 //Custom middleware to handle 404 errors
 app.use((req, res, next) => {
-  res.status(404).json({ error: 'Not Found' });
+  res.status(404).json({ error: "Not Found" });
 });
 
 app.listen(3000, () => {
