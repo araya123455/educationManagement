@@ -986,6 +986,7 @@ app.get("/testresultdetatil", (req, res) => {
             console.error(err);
             return res.status(500).json({ message: "An error occurred" });
           }
+          console.log(resultStudentั);
           res.send(resultStudent);
         });
       });
