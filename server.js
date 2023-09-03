@@ -24,7 +24,7 @@ const { error } = require("console");
 var con = mysql.createConnection({
   host: "localhost",
   user: "root",
-  database: "educationmanagment",
+  database: "educationmanagement",
   // password: "yourpassword"
 });
 
@@ -959,7 +959,7 @@ app.get("/testresultdetatil", (req, res) => {
       }
 
       // Third query to get stu_id (student haven't take class) check with testresultdetail
-      const selectTestdetail = `SELECT stu_id FROM testresultdetail WHERE test_id = ${test_id} AND  stu_id IN (${stuid.join(
+      const selectTestdetail = `SELECT stu_id FROM testresultdetail WHERE test_id = ${test_id} AND stu_id IN (${stuid.join(
         ","
       )})`;
       con.query(selectTestdetail, function (err, resultTestde) {
@@ -986,7 +986,6 @@ app.get("/testresultdetatil", (req, res) => {
             console.error(err);
             return res.status(500).json({ message: "An error occurred" });
           }
-          console.log(resultStudentั);
           res.send(resultStudent);
         });
       });
@@ -1027,7 +1026,7 @@ app.get("/testresultdetatiled", (req, res) => {
       }
 
       // Third query to get stu_id (student haven't take class) check with testresultdetail
-      const selectTestdetail = `SELECT stu_id FROM testresultdetail WHERE stu_id IN (${stuid.join(
+      const selectTestdetail = `SELECT stu_id FROM testresultdetail WHERE test_id = ${test_id} AND stu_id IN (${stuid.join(
         ","
       )})`;
       con.query(selectTestdetail, function (err, resultTestde) {
@@ -1308,7 +1307,6 @@ app.get("/testedresult", (req, res) => {
       console.error(err);
       return res.status(500).json({ message: "An error occurred" });
     }
-    console.log(testedresult);
     res.send(testedresult);
   });
 });
