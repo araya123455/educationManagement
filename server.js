@@ -24,7 +24,7 @@ const { error } = require("console");
 var con = mysql.createConnection({
   host: "localhost",
   user: "root",
-  database: "educationmanagement",
+  database: "educationmanagment",
   // password: "yourpassword"
 });
 
@@ -986,6 +986,7 @@ app.get("/testresultdetatil", (req, res) => {
             console.error(err);
             return res.status(500).json({ message: "An error occurred" });
           }
+          console.log(resultStudentั);
           res.send(resultStudent);
         });
       });
