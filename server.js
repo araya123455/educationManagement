@@ -955,7 +955,7 @@ app.get("/testresultdetatil", (req, res) => {
       if (stuid.length === 0) {
         return res
           .status(404)
-          .json({ message: "No available tests for the student" });
+          .json({ message: "No available for the student" });
       }
 
       // Third query to get stu_id (student haven't take class) check with testresultdetail
@@ -975,7 +975,7 @@ app.get("/testresultdetatil", (req, res) => {
         if (availableTestdeId.length === 0) {
           return res
             .status(404)
-            .json({ message: "No available tests for the student" });
+            .json({ message: "No available for the student" });
         }
 
         const selectStudentQuery = `SELECT stu_id, prefix, stu_Fname, stu_Lname FROM student WHERE stu_id IN (${availableTestdeId.join(
