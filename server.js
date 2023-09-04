@@ -24,7 +24,7 @@ const { error } = require("console");
 var con = mysql.createConnection({
   host: "localhost",
   user: "root",
-  database: "educationmanagement",
+  database: "educationmanagment",
   // password: "yourpassword"
 });
 
@@ -978,7 +978,7 @@ app.get("/testresultdetatil", (req, res) => {
             .json({ message: "No available for the student" });
         }
 
-        const selectStudentQuery = `SELECT stu_id, prefix, stu_Fname, stu_Lname FROM student WHERE stu_id IN (${availableTestdeId.join(
+        const selectStudentQuery = `SELECT stu_id, prefix, stu_Fname, stu_Lname, stu_sn FROM student WHERE stu_id IN (${availableTestdeId.join(
           ","
         )})`;
         con.query(selectStudentQuery, function (err, resultStudent) {
@@ -1045,7 +1045,7 @@ app.get("/testresultdetatiled", (req, res) => {
             .json({ message: "No available tests for the student" });
         }
 
-        const selectStudentQuery = `SELECT stu_id, prefix, stu_Fname, stu_Lname FROM student WHERE stu_id IN (${availableTestdeId.join(
+        const selectStudentQuery = `SELECT stu_id, prefix, stu_Fname, stu_Lname, stu_sn FROM student WHERE stu_id IN (${availableTestdeId.join(
           ","
         )})`;
         con.query(selectStudentQuery, function (err, resultStudent) {
@@ -1118,7 +1118,7 @@ app.get("/selecttest", (req, res) => {
     if (classResult.length === 0) {
       return res
         .status(404)
-        .json({ message: "No class found for the student" });
+        .json({ message: "Not found" });
     }
 
     const kinder_id = classResult[0].kinder_id;
@@ -1137,7 +1137,7 @@ app.get("/selecttest", (req, res) => {
       if (testIds.length === 0) {
         return res
           .status(404)
-          .json({ message: "No tests found for the student" });
+          .json({ message: "Not found" });
       }
 
       // Query to select test_ids that the student already has
@@ -1160,7 +1160,7 @@ app.get("/selecttest", (req, res) => {
         if (availableTestIds.length === 0) {
           return res
             .status(404)
-            .json({ message: "No available tests for the student" });
+            .json({ message: "Not found" });
         }
 
         // Third query to get questions based on available test_id values using IN clause
@@ -1194,7 +1194,7 @@ app.get("/finishedtest", (req, res) => {
     if (classResult.length === 0) {
       return res
         .status(404)
-        .json({ message: "No class found for the student" });
+        .json({ message: "Not found" });
     }
 
     const kinder_id = classResult[0].kinder_id;
@@ -1213,7 +1213,7 @@ app.get("/finishedtest", (req, res) => {
       if (testIds.length === 0) {
         return res
           .status(404)
-          .json({ message: "No tests found for the student" });
+          .json({ message: "Not found" });
       }
 
       // Query to select test_ids that the student already has
@@ -1236,7 +1236,7 @@ app.get("/finishedtest", (req, res) => {
         if (availableTestIds.length === 0) {
           return res
             .status(404)
-            .json({ message: "No available tests for the student" });
+            .json({ message: "Not found" });
         }
 
         // Third query to get questions based on available test_id values using IN clause
