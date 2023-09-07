@@ -737,12 +737,12 @@ app.post("/savetestresultdetail", (req, res) => {
 //------------irin assessment-----------
 app.post("/assessmentinsert", (req, res) => {
   console.log(req.body);
-  const { asses_id, assess_name, full_score } = req.body;
-  const sql = `INSERT INTO assessment (asses_id, assess_name, full_score) VALUES (?, ?, ?)`;
-  con.query(sql, [asses_id, assess_name, full_score], function (err, result) {
+  const { assess_name, full_score, kinder_id, yearterm_id } = req.body;
+  const sql = `INSERT INTO assessment (assess_name, full_score, kinder_id, yearterm_id) VALUES (?, ?, ?, ?)`;
+  con.query(sql, [assess_name, full_score,kinder_id, yearterm_id], function (err, result) {
     if (err) {
       console.error(err);
-      return res.status(500).json({ message: "An error!!" });
+      return res.status(500).json({ message: "An error occurred" });
     }
     console.log("1 recorded" + result);
     const newRecord = {
@@ -769,7 +769,7 @@ app.patch("/assessmentupdate/:id", (req, res) => {
       if (err) return res.end(err);
       const updatedassessmentSql = result[0];
       res.status(200).json({
-        message: `syllabus with ID ${asses_id} updated`,
+        message: `assessment with ID ${asses_id} updated`,
         data: updatedassessmentSql,
       });
     });
