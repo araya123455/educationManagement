@@ -24,7 +24,7 @@ const { error } = require("console");
 var con = mysql.createConnection({
   host: "localhost",
   user: "root",
-  database: "educationmanagment",
+  database: "educationmanagement",
   // password: "yourpassword"
 });
 
@@ -775,32 +775,30 @@ app.patch("/assessmentupdate/:id", (req, res) => {
     });
   });
 });
+// attendance detail
+app.post("/attendancedetailinsert", (req, res) => {
+  const { date, stu_id, attd_id } = req.body;
+  const sql = `INSERT INTO attendancedetail (  date, stu_id, attd_id ) VALUES ( ?, ?, ? )`;
 
-app.post("/attendanceinsert", (req, res) => {
-  const { attDt_id, date, stu_id, attd_id } = req.body;
-  const sql = `INSERT INTO attendancedetail ( attDt_id, date, stu_id, attd_id ) VALUES ( ?, ?, ?, ? )`;
-
-  con.query(
-    sql,
-    [attDt_id, date, stu_id, attd_id],
-    function (err, result) {
-      if (err) {
-        console.error(err);
-        return res.status(500).json({ message: "An error occurred" });
-      }
-
-      console.log("1 record inserted");
-      const newRecord = {
-        attDt_id, date, stu_id, attd_id
-      };
-      res.status(200).json({
-        message: "Successfully added a new testdetail",
-        data: newRecord,
-      });
+  con.query(sql, [date, stu_id, attd_id], function (err, result) {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "An error occurred" });
     }
-  );
+
+    console.log("1 record inserted");
+    const newRecord = {
+      date,
+      stu_id,
+      attd_id,
+    };
+    res.status(200).json({
+      message: "Successfully added a new testdetail",
+      data: newRecord,
+    });
+  });
 });
-app.patch("/attendanceupdate/:id", (req, res) => {
+app.patch("/attendancedetailupdate/:id", (req, res) => {
   const attDt_id = req.params.id;
   const { date, stu_id, attd_id } = req.body;
 
@@ -810,7 +808,7 @@ app.patch("/attendanceupdate/:id", (req, res) => {
     if (err) throw err;
     console.log(`attendancedetail with ID ${attDt_id} updated` + result);
 
-    const updatedattendancedetailSql = `SELECT * FROM testdetail WHERE testDe_id = ${testDe_id}`;
+    const updatedattendancedetailSql = `SELECT * FROM attendancedetail WHERE testDe_id = ${testDe_id}`;
     con.query(updatedattendancedetailSql, function (err, result) {
       if (err) return res.end(err);
       const updateattendancedetail = result[0];
@@ -885,7 +883,7 @@ app.get("/class", (req, res) => {
       console.error(err);
       return res.status(500).json({ message: "An error!!" });
     }
-    console.log("Result: " + result);
+    // console.log("Result: " + result);
     res.send(result);
   });
 });
@@ -897,7 +895,7 @@ app.get("/student", (req, res) => {
       console.error(err);
       return res.status(500).json({ message: "An error!!" });
     }
-    console.log("Result: " + result);
+    // console.log("Result: " + result);
     res.send(result);
   });
 });
@@ -953,12 +951,12 @@ app.get("/classtime", (req, res) => {
 app.get("/searchclasstime", (req, res) => {
   const sql = "select crt_id, kinder_id, yearterm_id from classroomtimetable";
   con.query(sql, function (err, result) {
-    console.log(result);
+    // console.log(result);
     if (err) {
       console.error(err);
       return res.status(500).json({ message: "An error!!" });
     }
-    console.log("Result: " + result);
+    // console.log("Result: " + result);
     res.send(result);
   });
 });
@@ -1029,7 +1027,7 @@ app.get("/testresultdetatil", (req, res) => {
     // Extracting kinder_id and yearterm_id
     const kinder_id = resultdetail[0].kinder_id;
     const yearterm_id = resultdetail[0].yearterm_id;
-    const test_id = resultdetail[0].test_id; 
+    const test_id = resultdetail[0].test_id;
 
     // Second query to get stu_id values based on kinder_id and yearterm_id from class
     const selectClassQuery = `SELECT stu_id FROM class WHERE kinder_id = ${kinder_id} AND yearterm_id = ${yearterm_id}`;
@@ -1094,7 +1092,7 @@ app.get("/testresultdetatiled", (req, res) => {
     // Extracting kinder_id and yearterm_id
     const kinder_id = resultdetail[0].kinder_id;
     const yearterm_id = resultdetail[0].yearterm_id;
-    const test_id = resultdetail[0].test_id; 
+    const test_id = resultdetail[0].test_id;
 
     // Second query to get stu_id values based on kinder_id and yearterm_id from class
     const selectClassQuery = `SELECT stu_id FROM class WHERE kinder_id = ${kinder_id} AND yearterm_id = ${yearterm_id}`;
@@ -1104,7 +1102,7 @@ app.get("/testresultdetatiled", (req, res) => {
         console.error(err);
         return res.status(500).json({ message: "An error occurred" });
       }
-      
+
       // Extracting stu_id
       const stuid = resultclass.map((result) => result.stu_id);
       if (stuid.length === 0) {
@@ -1204,9 +1202,7 @@ app.get("/selecttest", (req, res) => {
     }
 
     if (classResult.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "Not found" });
+      return res.status(404).json({ message: "Not found" });
     }
 
     const kinder_id = classResult[0].kinder_id;
@@ -1223,9 +1219,7 @@ app.get("/selecttest", (req, res) => {
       const testIds = testResult.map((result) => result.test_id);
 
       if (testIds.length === 0) {
-        return res
-          .status(404)
-          .json({ message: "Not found" });
+        return res.status(404).json({ message: "Not found" });
       }
 
       // Query to select test_ids that the student already has
@@ -1246,9 +1240,7 @@ app.get("/selecttest", (req, res) => {
         );
 
         if (availableTestIds.length === 0) {
-          return res
-            .status(404)
-            .json({ message: "Not found" });
+          return res.status(404).json({ message: "Not found" });
         }
 
         // Third query to get questions based on available test_id values using IN clause
@@ -1280,9 +1272,7 @@ app.get("/finishedtest", (req, res) => {
     }
 
     if (classResult.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "Not found" });
+      return res.status(404).json({ message: "Not found" });
     }
 
     const kinder_id = classResult[0].kinder_id;
@@ -1299,9 +1289,7 @@ app.get("/finishedtest", (req, res) => {
       const testIds = testResult.map((result) => result.test_id);
 
       if (testIds.length === 0) {
-        return res
-          .status(404)
-          .json({ message: "Not found" });
+        return res.status(404).json({ message: "Not found" });
       }
 
       // Query to select test_ids that the student already has
@@ -1322,9 +1310,7 @@ app.get("/finishedtest", (req, res) => {
         );
 
         if (availableTestIds.length === 0) {
-          return res
-            .status(404)
-            .json({ message: "Not found" });
+          return res.status(404).json({ message: "Not found" });
         }
 
         // Third query to get questions based on available test_id values using IN clause
@@ -1435,7 +1421,19 @@ app.get("/learningvideo", (req, res) => {
     res.send(result);
   });
 });
-//attendance
+//attendance detail
+app.get("/attendance", (req, res) => {
+  const sql = "select * from attendance";
+  con.query(sql, function (err, result) {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "An error!!" });
+    }
+    // console.log("Result: " + result);
+    res.send(result);
+  });
+});
+//attendance detail
 app.get("/attendancedetail", (req, res) => {
   const sql = "select * from attendancedetail";
   con.query(sql, function (err, result) {
@@ -1882,7 +1880,7 @@ app.delete("/questiondelete/:id", (req, res) => {
 });
 //-------assessment--------
 app.delete("/assessmentdelete/:id", (req, res) => {
-  const asses_id  = req.params.id;
+  const asses_id = req.params.id;
 
   const deleteassessment = `DELETE FROM assessment WHERE asses_id = ?`;
 
