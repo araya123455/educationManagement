@@ -1,6 +1,7 @@
 var bodyParser = require("body-parser");
 const cors = require("cors");
 const express = require("express");
+const moment = require('moment');
 const { status } = require("express/lib/response");
 const uploadRouter = require("./src/routers/upload_router");
 const uploadFileRouter = require("./src/routers/uploadfile_router");
@@ -739,20 +740,24 @@ app.post("/assessmentinsert", (req, res) => {
   console.log(req.body);
   const { assess_name, full_score, kinder_id, yearterm_id } = req.body;
   const sql = `INSERT INTO assessment (assess_name, full_score, kinder_id, yearterm_id) VALUES (?, ?, ?, ?)`;
-  con.query(sql, [assess_name, full_score,kinder_id, yearterm_id], function (err, result) {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({ message: "An error occurred" });
+  con.query(
+    sql,
+    [assess_name, full_score, kinder_id, yearterm_id],
+    function (err, result) {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ message: "An error occurred" });
+      }
+      console.log("1 recorded" + result);
+      const newRecord = {
+        sylla_name,
+      };
+      res.status(200).json({
+        message: "Successfully added a new syllabus",
+        data: newRecord,
+      });
     }
-    console.log("1 recorded" + result);
-    const newRecord = {
-      sylla_name,
-    };
-    res.status(200).json({
-      message: "Successfully added a new syllabus",
-      data: newRecord,
-    });
-  });
+  );
 });
 app.patch("/assessmentupdate/:id", (req, res) => {
   const asses_id = req.params.id;
@@ -800,11 +805,11 @@ app.post("/attendancedetailinsert", (req, res) => {
 });
 app.patch("/attendancedetailupdate/:id", (req, res) => {
   const attDt_id = req.params.id;
-  const { date, stu_id, attd_id } = req.body;
+  const { attd_id } = req.body;
 
-  const sql = `UPDATE attendancedetail SET date = ?,stu_id = ?, attd_id = ? WHERE attDt_id = ${attDt_id}`;
+  const sql = `UPDATE attendancedetail SET attd_id = ? WHERE attDt_id = ${attDt_id}`;
 
-  con.query(sql, [date, stu_id, attd_id], function (err, result) {
+  con.query(sql, [attd_id], function (err, result) {
     if (err) throw err;
     console.log(`attendancedetail with ID ${attDt_id} updated` + result);
 
@@ -980,6 +985,108 @@ app.get("/searchstuclass", (req, res) => {
     });
   });
 });
+//attendance detail
+app.get("/attendance", (req, res) => {
+  const sql = "select * from attendance";
+  con.query(sql, function (err, result) {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "An error!!" });
+    }
+    // console.log("Result: " + result);
+    res.send(result);
+  });
+});
+//attendance detail
+app.get("/attendancedetail", (req, res) => {
+  const sql = "select * from attendancedetail";
+  con.query(sql, function (err, result) {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "An error!!" });
+    }
+    // console.log("Result: " + result);
+    res.send(result);
+  });
+});
+app.get("/studentattendance", (req, res) => {
+  const { crt_id } = req.query;
+  // console.log(req.query);
+  // Query to get stu_id from class
+  const selectStuQuery = `SELECT stu_id FROM class WHERE crt_id = ${crt_id}`;
+  con.query(selectStuQuery, function (err, studentResult) {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "An error occurred" });
+    }
+
+    const student_id = studentResult.map((result) => result.stu_id);
+    if (student_id.length === 0) {
+      return res.status(404).json({ message: "Not found" });
+    }
+
+    // Query to select data of student from stu_id
+    const selectStudentDataQuery = `SELECT stu_id, prefix, stu_Fname, stu_Lname, stu_sn FROM student WHERE stu_id IN (${student_id.join(
+      ","
+    )})`;
+
+    con.query(selectStudentDataQuery, function (err, studentdata) {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ message: "An error occurred" });
+      }
+      res.send(studentdata);
+    });
+  });
+});
+// search attendance
+app.get("/searceattendance", (req, res) => {
+  const { date, stu_id, crt_id } = req.query;
+  let selectStuQuery = `SELECT stu_id FROM class WHERE crt_id = ${crt_id}`;
+  const pushparams = [];
+  if (stu_id) {
+    selectStuQuery += ` AND stu_id = ${stu_id}`;
+    pushparams.push(stu_id);
+  }
+  con.query(selectStuQuery, function (err, studentResult) {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "An error occurred" });
+    }
+
+    const student_id = studentResult.map((result) => result.stu_id);
+    if (student_id.length === 0) {
+      return res.status(404).json({ message: "Not found" });
+    }
+
+    let sql = "SELECT * FROM attendancedetail";
+    const params = [];
+    if (stu_id && date) {
+      sql += ` WHERE date = ? AND stu_id IN (${student_id.join(",")})`;
+      params.push(date, stu_id);
+    } else if (stu_id) {
+      sql += ` WHERE stu_id IN (${student_id.join(",")})`;
+      params.push(stu_id);
+    } else if (date) {
+      sql += ` WHERE date = ? AND stu_id IN (${student_id.join(",")})`;
+      params.push(date);
+    } else {
+      sql += ` WHERE stu_id IN (${student_id.join(",")})`;
+      params.push(stu_id);
+    }
+
+    con.query(sql, params, function (err, result) {
+      if (err) {
+        console.log(err);
+        return res.status(500).json({ message: "An error occurred!" });
+      }
+      res.status(200).json({
+        message: "Attendance",
+        data: result,
+      });
+    });
+  });
+});
 // Teat
 app.get("/test", (req, res) => {
   const sql = "select * from test";
@@ -988,7 +1095,7 @@ app.get("/test", (req, res) => {
       console.error(err);
       return res.status(500).json({ message: "An error!!" });
     }
-    console.log("Result: " + result);
+    // console.log("Result: " + result);
     res.send(result);
   });
 });
@@ -999,7 +1106,7 @@ app.get("/testde", (req, res) => {
       console.error(err);
       return res.status(500).json({ message: "An error!!" });
     }
-    console.log("Result: " + result);
+    // console.log("Result: " + result);
     res.send(result);
   });
 });
@@ -1418,30 +1525,6 @@ app.get("/learningvideo", (req, res) => {
       console.error(err);
       return res.status(500).json({ message: "An error!!" });
     }
-    res.send(result);
-  });
-});
-//attendance detail
-app.get("/attendance", (req, res) => {
-  const sql = "select * from attendance";
-  con.query(sql, function (err, result) {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({ message: "An error!!" });
-    }
-    // console.log("Result: " + result);
-    res.send(result);
-  });
-});
-//attendance detail
-app.get("/attendancedetail", (req, res) => {
-  const sql = "select * from attendancedetail";
-  con.query(sql, function (err, result) {
-    if (err) {
-      console.error(err);
-      return res.status(500).json({ message: "An error!!" });
-    }
-    // console.log("Result: " + result);
     res.send(result);
   });
 });
