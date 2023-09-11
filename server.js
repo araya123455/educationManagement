@@ -804,21 +804,21 @@ app.post("/attendancedetailinsert", (req, res) => {
   });
 });
 app.patch("/attendancedetailupdate/:id", (req, res) => {
-  const attDt_id = req.params.id;
+  const attdDt_id = req.params.id;
   const { attd_id } = req.body;
 
-  const sql = `UPDATE attendancedetail SET attd_id = ? WHERE attDt_id = ${attDt_id}`;
+  const sql = `UPDATE attendancedetail SET attd_id = ? WHERE attdDt_id = ${attdDt_id}`;
 
   con.query(sql, [attd_id], function (err, result) {
     if (err) throw err;
-    console.log(`attendancedetail with ID ${attDt_id} updated` + result);
+    console.log(`attendancedetail with ID ${attdDt_id} updated` + result);
 
-    const updatedattendancedetailSql = `SELECT * FROM attendancedetail WHERE testDe_id = ${testDe_id}`;
+    const updatedattendancedetailSql = `SELECT * FROM attendancedetail WHERE attdDt_id = ${attdDt_id}`;
     con.query(updatedattendancedetailSql, function (err, result) {
       if (err) return res.end(err);
       const updateattendancedetail = result[0];
       res.status(200).json({
-        message: `attendancedetail with ID ${attDt_id} updated`,
+        message: `attendancedetail with ID ${attdDt_id} updated`,
         data: updateattendancedetail,
       });
     });
@@ -1839,6 +1839,30 @@ app.delete("/qualificationdelete/:id", (req, res) => {
 
     res.status(200).json({
       message: `subject with ID ${sub_id} deleted`,
+    });
+  });
+});
+app.delete("/attendancedelete/:id", (req, res) => {
+  const attdDt_id = req.params.id;
+
+  const deletesubject = `DELETE FROM attendancedetail WHERE attdDt_id = ?`;
+
+  con.query(deletesubject, [attdDt_id], function (err, result) {
+    if (err) {
+      if (err.code === "ER_ROW_IS_REFERENCED_2") {
+        return res.status(400).json({
+          error: "Cannot delete this record due to references in other tables.",
+        });
+      } else {
+        return res.status(500).json({
+          error: "An error occurred while deleting the record.",
+        });
+      }
+    }
+    console.log(`attendancedetail with ID ${attdDt_id} deleted` + result);
+
+    res.status(200).json({
+      message: `attendancedetail with ID ${attdDt_id} deleted`,
     });
   });
 });
