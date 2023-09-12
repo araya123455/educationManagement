@@ -813,7 +813,7 @@ app.patch("/attendancedetailupdate/:id", (req, res) => {
     if (err) throw err;
     console.log(`attendancedetail with ID ${attdDt_id} updated` + result);
 
-    const updatedattendancedetailSql = `SELECT * FROM attendancedetail WHERE attdDt_id = ${attdDt_id}`;
+    const updatedattendancedetailSql = `SELECT * FROM attendancedetail WHERE attdDt_id = ${testDe_id}`;
     con.query(updatedattendancedetailSql, function (err, result) {
       if (err) return res.end(err);
       const updateattendancedetail = result[0];
