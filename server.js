@@ -25,7 +25,7 @@ const { error } = require("console");
 var con = mysql.createConnection({
   host: "localhost",
   user: "root",
-  database: "educationmanagement",
+  database: "educationmanagment",
   // password: "yourpassword"
 });
 
