@@ -843,7 +843,7 @@ app.post("/attendancedetailinsert", (req, res) => {
       attd_id,
     };
     res.status(200).json({
-      message: "Successfully added a new testdetail",
+      message: "Successfully added a new attendancedetail",
       data: newRecord,
     });
   });
@@ -865,6 +865,50 @@ app.patch("/attendancedetailupdate/:id", (req, res) => {
       res.status(200).json({
         message: `attendancedetail with ID ${attdDt_id} updated`,
         data: updateattendancedetail,
+      });
+    });
+  });
+});
+// Student subject score insert and edit
+app.post("/subjectscoreinsert", (req, res) => {
+  const { subscore, sub_id, stu_id } = req.body;
+  const sql = `INSERT INTO subjectscore ( subscore, sub_id, stu_id ) VALUES ( ?, ?, ? )`;
+
+  con.query(sql, [subscore, sub_id, stu_id], function (err, result) {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "An error occurred" });
+    }
+
+    console.log("1 record inserted");
+    const newRecord = {
+      subscore,
+      sub_id,
+      stu_id,
+    };
+    res.status(200).json({
+      message: "Successfully added a new subjectscore",
+      data: newRecord,
+    });
+  });
+});
+app.patch("/subjectscoreupdate/:id", (req, res) => {
+  const subscore_id = req.params.id;
+  const { subscore } = req.body;
+
+  const sql = `UPDATE subjectscore SET subscore = ? WHERE subscore_id = ${subscore_id}`;
+
+  con.query(sql, [subscore], function (err, result) {
+    if (err) throw err;
+    console.log(`subjectscore with ID ${subscore_id} updated` + result);
+
+    const updatedsubjectscoreSql = `SELECT * FROM subjectscore WHERE subscore_id = ${subscore_id}`;
+    con.query(updatedsubjectscoreSql, function (err, result) {
+      if (err) return res.end(err);
+      const updatesubjectscore = result[0];
+      res.status(200).json({
+        message: `subjectscore with ID ${subscore_id} updated`,
+        data: updatesubjectscore,
       });
     });
   });
@@ -1549,8 +1593,89 @@ app.get("/selectedtest", (req, res) => {
     res.send(testresult);
   });
 });
-// Search subject score
-app.get("/showsubjectscore")
+// Search syllabus
+app.get("/shownamesyllabus", (req, res) => {
+  const { kinder_id, yearterm_id } = req.query;
+  const selectSyllabus = `SELECT sylla_id FROM classroomtimetable WHERE kinder_id = ${kinder_id} AND yearterm_id = ${yearterm_id}`;
+
+  con.query(selectSyllabus, function (err, syllabusid) {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "An error occurred" });
+    }
+
+    const takesyllabusid = syllabusid.map((result) => result.sylla_id);
+    if (takesyllabusid.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No students found for the given parameters" });
+    }
+
+    const selectSyllabusname = `SELECT * FROM syllabus WHERE sylla_id = ${takesyllabusid}`;
+    con.query(selectSyllabusname, function (err, resultsyllaname) {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ message: "An error occurred" });
+      }
+      res.send(resultsyllaname);
+    });
+  });
+});
+// Search subject
+app.get("/shownamesubject", (req, res) => {
+  const { kinder_id, yearterm_id } = req.query;
+  const selectSyllabus = `SELECT sylla_id FROM classroomtimetable WHERE kinder_id = ${kinder_id} AND yearterm_id = ${yearterm_id}`;
+
+  con.query(selectSyllabus, function (err, syllabusid) {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "An error occurred" });
+    }
+
+    const takesyllabusid = syllabusid.map((result) => result.sylla_id);
+    if (takesyllabusid.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No students found for the given parameters" });
+    }
+
+    const selectSyllabusname = `SELECT sylla_id FROM syllabus WHERE sylla_id = ${takesyllabusid}`;
+    con.query(selectSyllabusname, function (err, resultsyllaname) {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ message: "An error occurred" });
+      }
+      // Just make sure
+      const takesylladata = resultsyllaname.map((result) => result.sylla_id);
+      if (takesylladata.length === 0) {
+        return res
+          .status(404)
+          .json({ message: "No students found for the given parameters" });
+      }
+
+      const selectSubject = `SELECT * FROM subject WHERE sylla_id = ${takesylladata}`;
+      con.query(selectSubject, function (err, resultsubject) {
+        if (err) {
+          console.error(err);
+          return res.status(500).json({ message: "An error occurred" });
+        }
+        res.send(resultsubject);
+      });
+    });
+  });
+});
+// Show student student score
+app.get("/showstusubscore", (req, res) => {
+  const sql = "select * from subjectscore";
+  con.query(sql, function (err, result) {
+    // console.log(result);
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "An error!!" });
+    }
+    res.send(result);
+  });
+});
 //------irin----------
 app.get("/assessment", (req, res) => {
   const sql = "select * from assessment";
@@ -1586,17 +1711,21 @@ app.get("/findstudent", (req, res) => {
       console.error(err);
       return res.status(500).json({ message: "An error occurred" });
     }
-    
+
     // Extracting stu_id values from the query result
     const takestudentId = studentId.map((result) => result.stu_id);
 
     // Check if there are available students
     if (takestudentId.length === 0) {
-      return res.status(404).json({ message: "No students found for the given parameters" });
+      return res
+        .status(404)
+        .json({ message: "No students found for the given parameters" });
     }
 
     // Construct the query to fetch student data
-    const selectStudentdata = `SELECT stu_id, prefix, stu_Fname, stu_Lname, stu_sn FROM student WHERE stu_id IN (${takestudentId.join(",")})`;
+    const selectStudentdata = `SELECT stu_id, prefix, stu_Fname, stu_Lname, stu_sn FROM student WHERE stu_id IN (${takestudentId.join(
+      ","
+    )})`;
 
     con.query(selectStudentdata, function (err, resultstudata) {
       if (err) {
@@ -1617,7 +1746,7 @@ app.get("/findassessment", (req, res) => {
       console.error(err);
       return res.status(500).json({ message: "An error occurred" });
     }
-    res.send(AssessData)
+    res.send(AssessData);
   });
 });
 
@@ -2114,7 +2243,7 @@ app.delete("/assessmentdelete/:id", (req, res) => {
 });
 app.delete("/assessmentstudelete/:id", (req, res) => {
   const assesSc_id = req.params.id;
-  console.log(assesSc_id);
+  // console.log(assesSc_id);
   const deleteassessment = `DELETE FROM assessmentscore WHERE assesSc_id = ?`;
 
   con.query(deleteassessment, [assesSc_id], function (err, result) {
@@ -2132,6 +2261,29 @@ app.delete("/assessmentstudelete/:id", (req, res) => {
     console.log(`assessment with ID ${assesSc_id} deleted` + result);
     res.status(200).json({
       message: `assessment with ID ${assesSc_id} deleted`,
+    });
+  });
+});
+app.delete("/subjectscoredelete/:id", (req, res) => {
+  const subscore_id = req.params.id;
+  // console.log(subscore_id);
+  const deleteassessment = `DELETE FROM subjectscore WHERE subscore_id = ?`;
+
+  con.query(deleteassessment, [subscore_id], function (err, result) {
+    if (err) {
+      if (err.code === "ER_ROW_IS_REFERENCED_2") {
+        return res.status(400).json({
+          error: "Cannot delete this record due to references in other tables.",
+        });
+      } else {
+        return res.status(500).json({
+          error: "An error occurred while deleting the record.",
+        });
+      }
+    }
+    console.log(`assessment with ID ${subscore_id} deleted` + result);
+    res.status(200).json({
+      message: `assessment with ID ${subscore_id} deleted`,
     });
   });
 });
