@@ -736,10 +736,12 @@ app.post("/savetestresultdetail", (req, res) => {
   );
 });
 //------------irin assessment-----------
+//assessmentinsert
 app.post("/assessmentinsert", (req, res) => {
+  // const {kinder_id, yearterm_id} = req.query;
   console.log(req.body);
-  const { assess_name, full_score, kinder_id, yearterm_id } = req.body;
-  const sql = `INSERT INTO assessment (assess_name, full_score, kinder_id, yearterm_id) VALUES (?, ?, ?, ?)`;
+  const { assess_name, full_score, kinder_id, yearterm_id} = req.body;
+  const sql = `INSERT INTO assessment (assess_name, full_score, kinder_id, yearterm_id ) VALUES (?, ?, ?, ?)`;
   con.query(
     sql,
     [assess_name, full_score, kinder_id, yearterm_id],
@@ -750,22 +752,26 @@ app.post("/assessmentinsert", (req, res) => {
       }
       console.log("1 recorded" + result);
       const newRecord = {
-        sylla_name,
+        assess_name,
+        full_score,
+        kinder_id,
+        yearterm_id
       };
       res.status(200).json({
-        message: "Successfully added a new syllabus",
+        message: "Successfully added a new assessment",
         data: newRecord,
       });
     }
   );
 });
+//assessmentupdate
 app.patch("/assessmentupdate/:id", (req, res) => {
   const asses_id = req.params.id;
-  const { assess_name } = req.body;
+  const { assess_name, full_score } = req.body;
 
-  const sql = `UPDATE assessment SET assess_name = ? WHERE asses_id = ${asses_id}`;
+  const sql = `UPDATE assessment SET assess_name = ?, full_score = ? WHERE asses_id = ${asses_id}`;
 
-  con.query(sql, [assess_name], function (err, result) {
+  con.query(sql, [assess_name, full_score], function (err, result) {
     if (err) throw err;
     console.log(`assessment with ID ${asses_id} updated` + result);
 
