@@ -1,7 +1,7 @@
 var bodyParser = require("body-parser");
 const cors = require("cors");
 const express = require("express");
-const moment = require('moment');
+const moment = require("moment");
 const { status } = require("express/lib/response");
 const uploadRouter = require("./src/routers/upload_router");
 const uploadFileRouter = require("./src/routers/uploadfile_router");
@@ -25,7 +25,7 @@ const { error } = require("console");
 var con = mysql.createConnection({
   host: "localhost",
   user: "root",
-  database: "educationmanagment",
+  database: "educationmanagement",
   // password: "yourpassword"
 });
 
@@ -736,12 +736,10 @@ app.post("/savetestresultdetail", (req, res) => {
   );
 });
 //------------irin assessment-----------
-//assessmentinsert
 app.post("/assessmentinsert", (req, res) => {
-  // const {kinder_id, yearterm_id} = req.query;
   console.log(req.body);
-  const { assess_name, full_score, kinder_id, yearterm_id} = req.body;
-  const sql = `INSERT INTO assessment (assess_name, full_score, kinder_id, yearterm_id ) VALUES (?, ?, ?, ?)`;
+  const { assess_name, full_score, kinder_id, yearterm_id } = req.body;
+  const sql = `INSERT INTO assessment (assess_name, full_score, kinder_id, yearterm_id) VALUES (?, ?, ?, ?)`;
   con.query(
     sql,
     [assess_name, full_score, kinder_id, yearterm_id],
@@ -752,19 +750,15 @@ app.post("/assessmentinsert", (req, res) => {
       }
       console.log("1 recorded" + result);
       const newRecord = {
-        assess_name,
-        full_score,
-        kinder_id,
-        yearterm_id
+        sylla_name,
       };
       res.status(200).json({
-        message: "Successfully added a new assessment",
+        message: "Successfully added a new syllabus",
         data: newRecord,
       });
     }
   );
 });
-//assessmentupdate
 app.patch("/assessmentupdate/:id", (req, res) => {
   const asses_id = req.params.id;
   const { assess_name, full_score } = req.body;
@@ -782,6 +776,51 @@ app.patch("/assessmentupdate/:id", (req, res) => {
       res.status(200).json({
         message: `assessment with ID ${asses_id} updated`,
         data: updatedassessmentSql,
+      });
+    });
+  });
+});
+// assessment score
+app.post("/assessmentstuinsert", (req, res) => {
+  console.log(req.body);
+  const { asses_score, stu_id, asses_id } = req.body;
+  const sql = `INSERT INTO assessmentscore (asses_score, stu_id, asses_id) VALUES (?, ?, ?)`;
+  con.query(sql, [asses_score, stu_id, asses_id], function (err, result) {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "An error occurred" });
+    }
+    console.log("1 recorded" + result);
+    const newRecord = {
+      asses_score,
+      stu_id,
+      asses_id,
+    };
+    res.status(200).json({
+      message: "Successfully added a new assessment score",
+      data: newRecord,
+    });
+  });
+});
+app.patch("/assessmentstuupdate/:id", (req, res) => {
+  const assesSc_id = req.params.id;
+  const { asses_score } = req.body;
+  // console.log(req.params.id);
+  // console.log(asses_score);
+
+  const sql = `UPDATE assessmentscore SET asses_score = ? WHERE assesSc_id = ${assesSc_id}`;
+
+  con.query(sql, [asses_score], function (err, result) {
+    if (err) throw err;
+    console.log(`assessment score with ID ${assesSc_id} updated` + result);
+
+    const updatedassessmentscoreSql = `SELECT * FROM assessmentscore WHERE assesSc_id = ${assesSc_id}`;
+    con.query(updatedassessmentscoreSql, function (err, result) {
+      if (err) return res.end(err);
+      const updatedassessmentscoreSql = result[0];
+      res.status(200).json({
+        message: `assessment score with ID ${assesSc_id} updated`,
+        data: updatedassessmentscoreSql,
       });
     });
   });
@@ -819,7 +858,7 @@ app.patch("/attendancedetailupdate/:id", (req, res) => {
     if (err) throw err;
     console.log(`attendancedetail with ID ${attdDt_id} updated` + result);
 
-    const updatedattendancedetailSql = `SELECT * FROM attendancedetail WHERE attdDt_id = ${testDe_id}`;
+    const updatedattendancedetailSql = `SELECT * FROM attendancedetail WHERE attdDt_id = ${attdDt_id}`;
     con.query(updatedattendancedetailSql, function (err, result) {
       if (err) return res.end(err);
       const updateattendancedetail = result[0];
@@ -1510,6 +1549,8 @@ app.get("/selectedtest", (req, res) => {
     res.send(testresult);
   });
 });
+// Search subject score
+app.get("/showsubjectscore")
 //------irin----------
 app.get("/assessment", (req, res) => {
   const sql = "select * from assessment";
@@ -1519,10 +1560,67 @@ app.get("/assessment", (req, res) => {
       console.error(err);
       return res.status(500).json({ message: "An error!!" });
     }
-    console.log("Result: " + result);
+    // console.log("Result: " + result);
     res.send(result);
   });
 });
+app.get("/assessmentstu", (req, res) => {
+  const sql = "select * from assessmentscore";
+  con.query(sql, function (err, result) {
+    // console.log(result);
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "An error!!" });
+    }
+    // console.log("Result: " + result);
+    res.send(result);
+  });
+});
+// find student from yearterm_id and kinder_id
+app.get("/findstudent", (req, res) => {
+  const { kinder_id, yearterm_id } = req.query;
+  const selectStudentId = `SELECT stu_id FROM class WHERE kinder_id = ${kinder_id} AND yearterm_id = ${yearterm_id}`;
+
+  con.query(selectStudentId, function (err, studentId) {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "An error occurred" });
+    }
+    
+    // Extracting stu_id values from the query result
+    const takestudentId = studentId.map((result) => result.stu_id);
+
+    // Check if there are available students
+    if (takestudentId.length === 0) {
+      return res.status(404).json({ message: "No students found for the given parameters" });
+    }
+
+    // Construct the query to fetch student data
+    const selectStudentdata = `SELECT stu_id, prefix, stu_Fname, stu_Lname, stu_sn FROM student WHERE stu_id IN (${takestudentId.join(",")})`;
+
+    con.query(selectStudentdata, function (err, resultstudata) {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ message: "An error occurred" });
+      }
+      res.send(resultstudata);
+    });
+  });
+});
+// find assesment on class
+app.get("/findassessment", (req, res) => {
+  const { kinder_id, yearterm_id } = req.query;
+  const selectAssessId = `SELECT asses_id, assess_name, full_score FROM assessment WHERE kinder_id = ${kinder_id} AND yearterm_id = ${yearterm_id}`;
+
+  con.query(selectAssessId, function (err, AssessData) {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "An error occurred" });
+    }
+    res.send(AssessData)
+  });
+});
+
 //------------------------------
 app.get("/learningvideo", (req, res) => {
   const sql = "select * from learningmaterialsvideo where cont_id";
@@ -1994,7 +2092,6 @@ app.delete("/questiondelete/:id", (req, res) => {
 //-------assessment--------
 app.delete("/assessmentdelete/:id", (req, res) => {
   const asses_id = req.params.id;
-
   const deleteassessment = `DELETE FROM assessment WHERE asses_id = ?`;
 
   con.query(deleteassessment, [asses_id], function (err, result) {
@@ -2012,6 +2109,29 @@ app.delete("/assessmentdelete/:id", (req, res) => {
     console.log(`assessment with ID ${asses_id} deleted` + result);
     res.status(200).json({
       message: `assessment with ID ${asses_id} deleted`,
+    });
+  });
+});
+app.delete("/assessmentstudelete/:id", (req, res) => {
+  const assesSc_id = req.params.id;
+  console.log(assesSc_id);
+  const deleteassessment = `DELETE FROM assessmentscore WHERE assesSc_id = ?`;
+
+  con.query(deleteassessment, [assesSc_id], function (err, result) {
+    if (err) {
+      if (err.code === "ER_ROW_IS_REFERENCED_2") {
+        return res.status(400).json({
+          error: "Cannot delete this record due to references in other tables.",
+        });
+      } else {
+        return res.status(500).json({
+          error: "An error occurred while deleting the record.",
+        });
+      }
+    }
+    console.log(`assessment with ID ${assesSc_id} deleted` + result);
+    res.status(200).json({
+      message: `assessment with ID ${assesSc_id} deleted`,
     });
   });
 });
