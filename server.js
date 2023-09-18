@@ -1666,7 +1666,6 @@ app.get("/shownamesubject", (req, res) => {
 });
 // Show student student score
 app.get("/showstusubscore", (req, res) => {
-  const sql = "select * from subjectscore";
   con.query(sql, function (err, result) {
     // console.log(result);
     if (err) {
@@ -1690,7 +1689,6 @@ app.get("/assessment", (req, res) => {
   });
 });
 app.get("/assessmentstu", (req, res) => {
-  const sql = "select * from assessmentscore";
   con.query(sql, function (err, result) {
     // console.log(result);
     if (err) {
