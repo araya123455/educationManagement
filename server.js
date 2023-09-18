@@ -1666,6 +1666,7 @@ app.get("/shownamesubject", (req, res) => {
 });
 // Show student student score
 app.get("/showstusubscore", (req, res) => {
+  const sql = "SELECT * FROM subjectscore";
   con.query(sql, function (err, result) {
     // console.log(result);
     if (err) {
@@ -1675,6 +1676,19 @@ app.get("/showstusubscore", (req, res) => {
     res.send(result);
   });
 });
+app.get("/showstusubreport", (req, res) => {
+  const { stu_id } = req.query;
+  const sql = `SELECT * FROM subjectscore WHERE stu_id = ${stu_id}`;
+  con.query(sql, function (err, result) {
+    // console.log(result);
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "An error!!" });
+    }
+    res.send(result);
+  });
+});
+
 //------irin----------
 app.get("/assessment", (req, res) => {
   const sql = "select * from assessment";
@@ -1689,6 +1703,7 @@ app.get("/assessment", (req, res) => {
   });
 });
 app.get("/assessmentstu", (req, res) => {
+  const sql = "SELECT * FROM assessmentscore";
   con.query(sql, function (err, result) {
     // console.log(result);
     if (err) {
@@ -1696,6 +1711,18 @@ app.get("/assessmentstu", (req, res) => {
       return res.status(500).json({ message: "An error!!" });
     }
     // console.log("Result: " + result);
+    res.send(result);
+  });
+});
+app.get("/assessmentreport", (req, res) => {
+  const { stu_id } = req.query;
+  const sql = `SELECT * FROM assessmentscore WHERE stu_id = ${stu_id}`;
+  con.query(sql, function (err, result) {
+    // console.log(result);
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "An error!!" });
+    }
     res.send(result);
   });
 });
