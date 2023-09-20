@@ -468,6 +468,27 @@ app.patch("/subjectupdate/:id", (req, res) => {
     });
   });
 });
+app.patch("/subfullscoretupdate/:id", (req, res) => {
+  const sub_id = req.params.id;
+  const { fullscore } = req.body;
+
+  const sql = `UPDATE subject SET fullscore = ? WHERE sub_id = ${sub_id}`;
+
+  con.query(sql, [fullscore], function (err, result) {
+    if (err) throw err;
+    console.log(`subject with ID ${sub_id} updated` + result);
+
+    const updatedsubjectSql = `SELECT * FROM subject WHERE sub_id = ${sub_id}`;
+    con.query(updatedsubjectSql, function (err, result) {
+      if (err) return res.end(err);
+      const updatedsubject = result[0];
+      res.status(200).json({
+        message: `subject with ID ${sub_id} updated`,
+        data: updatedsubject,
+      });
+    });
+  });
+});
 // ClassroomTimeTable
 app.post("/classtimeinsert", (req, res) => {
   const { kinder_id, yearterm_id, sylla_id, tch_id } = req.body;
