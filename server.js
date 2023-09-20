@@ -468,6 +468,27 @@ app.patch("/subjectupdate/:id", (req, res) => {
     });
   });
 });
+app.patch("/subfullscoretupdate/:id", (req, res) => {
+  const sub_id = req.params.id;
+  const { fullscore } = req.body;
+
+  const sql = `UPDATE subject SET fullscore = ? WHERE sub_id = ${sub_id}`;
+
+  con.query(sql, [fullscore], function (err, result) {
+    if (err) throw err;
+    console.log(`subject with ID ${sub_id} updated` + result);
+
+    const updatedsubjectSql = `SELECT * FROM subject WHERE sub_id = ${sub_id}`;
+    con.query(updatedsubjectSql, function (err, result) {
+      if (err) return res.end(err);
+      const updatedsubject = result[0];
+      res.status(200).json({
+        message: `subject with ID ${sub_id} updated`,
+        data: updatedsubject,
+      });
+    });
+  });
+});
 // ClassroomTimeTable
 app.post("/classtimeinsert", (req, res) => {
   const { kinder_id, yearterm_id, sylla_id, tch_id } = req.body;
@@ -1666,7 +1687,7 @@ app.get("/shownamesubject", (req, res) => {
 });
 // Show student student score
 app.get("/showstusubscore", (req, res) => {
-  const sql = "select * from subjectscore";
+  const sql = "SELECT * FROM subjectscore";
   con.query(sql, function (err, result) {
     // console.log(result);
     if (err) {
@@ -1676,6 +1697,19 @@ app.get("/showstusubscore", (req, res) => {
     res.send(result);
   });
 });
+app.get("/showstusubreport", (req, res) => {
+  const { stu_id } = req.query;
+  const sql = `SELECT * FROM subjectscore WHERE stu_id = ${stu_id}`;
+  con.query(sql, function (err, result) {
+    // console.log(result);
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "An error!!" });
+    }
+    res.send(result);
+  });
+});
+
 //------irin----------
 app.get("/assessment", (req, res) => {
   const sql = "select * from assessment";
@@ -1690,7 +1724,7 @@ app.get("/assessment", (req, res) => {
   });
 });
 app.get("/assessmentstu", (req, res) => {
-  const sql = "select * from assessmentscore";
+  const sql = "SELECT * FROM assessmentscore";
   con.query(sql, function (err, result) {
     // console.log(result);
     if (err) {
@@ -1698,6 +1732,18 @@ app.get("/assessmentstu", (req, res) => {
       return res.status(500).json({ message: "An error!!" });
     }
     // console.log("Result: " + result);
+    res.send(result);
+  });
+});
+app.get("/assessmentreport", (req, res) => {
+  const { stu_id } = req.query;
+  const sql = `SELECT * FROM assessmentscore WHERE stu_id = ${stu_id}`;
+  con.query(sql, function (err, result) {
+    // console.log(result);
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "An error!!" });
+    }
     res.send(result);
   });
 });
