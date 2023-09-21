@@ -169,8 +169,9 @@ app.post("/teacherinsert", (req, res) => {
     tch_pass,
     status,
     tch_sect,
+    position_id,
   } = req.body;
-  const sql = `INSERT INTO teacher (prefix, tch_Fname, tch_Lname, tch_sn, tch_user, tch_pass, status, tch_sect) VALUES ( ? , ? , ?, ?, ?, ?, ?, ?)`;
+  const sql = `INSERT INTO teacher (prefix, tch_Fname, tch_Lname, tch_sn, tch_user, tch_pass, status, tch_sect, position_id) VALUES ( ? , ? , ?, ?, ?, ?, ?, ?, ?)`;
   con.query(
     sql,
     [
@@ -182,6 +183,7 @@ app.post("/teacherinsert", (req, res) => {
       tch_pass,
       status,
       tch_sect,
+      position_id,
     ],
     function (err, result) {
       if (err) {
@@ -198,6 +200,7 @@ app.post("/teacherinsert", (req, res) => {
         tch_pass,
         status,
         tch_sect,
+        position_id,
       };
       res
         .status(200)
@@ -207,13 +210,13 @@ app.post("/teacherinsert", (req, res) => {
 });
 app.patch("/teacherupdate/:id", (req, res) => {
   const tch_id = req.params.id;
-  const { prefix, tch_Fname, tch_Lname, tch_pass, status, tch_sect } = req.body;
+  const { prefix, tch_Fname, tch_Lname, tch_pass, status, tch_sect, position_id, } = req.body;
 
-  const sql = `UPDATE teacher SET prefix = ?, tch_Fname = ?, tch_Lname = ?, tch_pass = ?, status = ?, tch_sect = ? WHERE tch_id = ${tch_id}`;
+  const sql = `UPDATE teacher SET prefix = ?, tch_Fname = ?, tch_Lname = ?, tch_pass = ?, status = ?, tch_sect = ?, position_id = ? WHERE tch_id = ${tch_id}`;
 
   con.query(
     sql,
-    [prefix, tch_Fname, tch_Lname, tch_pass, status, tch_sect],
+    [prefix, tch_Fname, tch_Lname, tch_pass, status, tch_sect, position_id],
     function (err, result) {
       if (err) throw err;
       console.log(`Teacher with ID ${tch_id} updated` + result);
@@ -981,6 +984,17 @@ app.get("/kinderroom", (req, res) => {
 });
 app.get("/teacher", (req, res) => {
   const sql = "select * from teacher";
+  con.query(sql, function (err, result) {
+    // console.log(result);
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "An error!!" });
+    }
+    res.send(result);
+  });
+});
+app.get("/teacherposi", (req, res) => {
+  const sql = "select * from teacherposi";
   con.query(sql, function (err, result) {
     // console.log(result);
     if (err) {
