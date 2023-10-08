@@ -25,7 +25,7 @@ const { error } = require("console");
 var con = mysql.createConnection({
   host: "localhost",
   user: "root",
-  database: "educationmanagment",
+  database: "educationmanagement",
   // password: "yourpassword"
 });
 
@@ -774,7 +774,10 @@ app.post("/assessmentinsert", (req, res) => {
       }
       console.log("1 recorded" + result);
       const newRecord = {
-        sylla_name,
+        assess_name, 
+        full_score,
+        kinder_id, 
+        yearterm_id
       };
       res.status(200).json({
         message: "Successfully added a new syllabus",
