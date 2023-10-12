@@ -39,6 +39,7 @@ app.post("/admin/login", (req, res) => {
   // console.log(req.body);
   const sql = `SELECT * FROM admin where adm_user = ? and adm_pass = ?;`;
   con.query(sql, [adm_user, adm_pass], function (err, result) {
+    console.log(result);
     if (err) return res.end(err);
     if (result.length > 0) {
       console.log("result", result);
@@ -52,7 +53,7 @@ app.post("/teacher/login", (req, res) => {
   // console.log("req.body", res.body);
   const sql = `SELECT * FROM teacher where tch_user = ? and tch_pass = ?;`;
   con.query(sql, [tch_user, tch_pass], function (err, result) {
-    console.log("result123", result);
+    // console.log("result123", result);
     if (err) return res.end(err);
     if (result.length > 0) res.send({ data: result, message: "success" });
     else res.send("Try Again");
@@ -210,7 +211,15 @@ app.post("/teacherinsert", (req, res) => {
 });
 app.patch("/teacherupdate/:id", (req, res) => {
   const tch_id = req.params.id;
-  const { prefix, tch_Fname, tch_Lname, tch_pass, status, tch_sect, position_id, } = req.body;
+  const {
+    prefix,
+    tch_Fname,
+    tch_Lname,
+    tch_pass,
+    status,
+    tch_sect,
+    position_id,
+  } = req.body;
 
   const sql = `UPDATE teacher SET prefix = ?, tch_Fname = ?, tch_Lname = ?, tch_pass = ?, status = ?, tch_sect = ?, position_id = ? WHERE tch_id = ${tch_id}`;
 
@@ -365,13 +374,14 @@ app.post("/studentinsert", (req, res) => {
 });
 app.patch("/studentupdate/:id", (req, res) => {
   const stu_id = req.params.id;
-  const { prefix, stu_Fname, stu_Lname, stu_pass, status } = req.body;
+  const { prefix, stu_Fname, stu_Lname, stu_sn, stu_user, stu_pass, status } =
+    req.body;
 
-  const sql = `UPDATE student SET prefix = ?, stu_Fname = ?, stu_Lname = ?, stu_pass = ?, status = ? WHERE stu_id = ${stu_id}`;
+  const sql = `UPDATE student SET prefix = ?, stu_Fname = ?, stu_Lname = ?, stu_sn = ?, stu_user = ?, stu_pass = ?, status = ? WHERE stu_id = ${stu_id}`;
 
   con.query(
     sql,
-    [prefix, stu_Fname, stu_Lname, stu_pass, status],
+    [prefix, stu_Fname, stu_Lname, stu_sn, stu_user, stu_pass, status],
     function (err, result) {
       if (err) throw err;
       console.log(`Student with ID ${stu_id} updated` + result);
@@ -452,11 +462,11 @@ app.post("/subjectinsert", (req, res) => {
 });
 app.patch("/subjectupdate/:id", (req, res) => {
   const sub_id = req.params.id;
-  const { sub_name, sylla_id } = req.body;
+  const { sub_name } = req.body;
 
-  const sql = `UPDATE subject SET sub_name = ?, sylla_id = ? WHERE sub_id = ${sub_id}`;
+  const sql = `UPDATE subject SET sub_name = ? WHERE sub_id = ${sub_id}`;
 
-  con.query(sql, [sub_name, sylla_id], function (err, result) {
+  con.query(sql, [sub_name], function (err, result) {
     if (err) throw err;
     console.log(`subject with ID ${sub_id} updated` + result);
 
@@ -774,10 +784,10 @@ app.post("/assessmentinsert", (req, res) => {
       }
       console.log("1 recorded" + result);
       const newRecord = {
-        assess_name, 
+        assess_name,
         full_score,
-        kinder_id, 
-        yearterm_id
+        kinder_id,
+        yearterm_id,
       };
       res.status(200).json({
         message: "Successfully added a new syllabus",
@@ -996,6 +1006,87 @@ app.get("/teacher", (req, res) => {
     res.send(result);
   });
 });
+app.get("/searchteacher", (req, res) => {
+  const { stu_id } = req.query;
+
+  // First query to get crt_id from class
+  const selectClassQuery = "SELECT crt_id FROM class WHERE stu_id = ?";
+
+  con.query(selectClassQuery, [stu_id], function (err, classResult) {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "An error occurred" });
+    }
+
+    const class_id = classResult.map((result) => result.crt_id);
+    if (class_id.length === 0) {
+      return res.status(404).json({ message: "Not found" });
+    }
+
+    // Query to select data of stu_id from classroomtimetable
+    const selectTeacherIdQuery =
+      "SELECT tch_id FROM classroomtimetable WHERE crt_id = ?";
+
+    con.query(selectTeacherIdQuery, [class_id[0]], function (err, teacherId) {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ message: "An error occurred" });
+      }
+
+      const teacher_id = teacherId.map((result) => result.tch_id);
+      if (teacher_id.length === 0) {
+        return res.status(404).json({ message: "Not found" });
+      }
+
+      // Query to select data of teacher from tch_id
+      const selectTeacherDataQuery = "SELECT * FROM teacher WHERE tch_id = ?";
+
+      con.query(
+        selectTeacherDataQuery,
+        [teacher_id[0]],
+        function (err, teacherdata) {
+          if (err) {
+            console.error(err);
+            return res.status(500).json({ message: "An error occurred" });
+          }
+          res.send(teacherdata);
+        }
+      );
+    });
+  });
+});
+app.get("/searchdirector", (req, res) => {
+  const selectPosiQuery =
+    'SELECT position_id FROM teacherposi WHERE position = "ผู้อำนวยการ"'; // Use single quotes around the string value
+
+  con.query(selectPosiQuery, function (err, posiResult) {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "An error occurred" });
+    }
+
+    const posi_id = posiResult.map((result) => result.position_id);
+    if (posi_id.length === 0) {
+      return res.status(404).json({ message: "Not found" });
+    }
+
+    // Assuming you want to select teachers with a matching position_id
+    const selectTeacherDataQuery = `SELECT * FROM teacher WHERE position_id = ?`; // Use a placeholder for the value
+    con.query(
+      selectTeacherDataQuery,
+      [posi_id[0]],
+      function (err, teacherdata) {
+        // Use posi_id[0] to get the first position_id
+        if (err) {
+          console.error(err);
+          return res.status(500).json({ message: "An error occurred" });
+        }
+        res.send(teacherdata);
+      }
+    );
+  });
+});
+
 app.get("/teacherposi", (req, res) => {
   const sql = "select * from teacherposi";
   con.query(sql, function (err, result) {
@@ -1019,6 +1110,58 @@ app.get("/class", (req, res) => {
     res.send(result);
   });
 });
+app.get("/pyearterm", (req, res) => {
+  const { stu_id } = req.query;
+  const sql = `SELECT yearterm_id FROM class WHERE stu_id = ${stu_id}`;
+  con.query(sql, function (err, yeartermResult) {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "An error occurred" });
+    }
+    const yearterm_id = yeartermResult.map((result) => result.yearterm_id);
+    if (yearterm_id.length === 0) {
+      return res.status(404).json({ message: "Not found" });
+    }
+
+    const selectStuYeartermDataQuery = `SELECT * FROM schoolyearterm WHERE yearTerm_id IN (${yearterm_id.join(
+      ","
+    )})`;
+
+    con.query(selectStuYeartermDataQuery, function (err, yeartermdata) {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ message: "An error occurred" });
+      }
+      res.send(yeartermdata);
+    });
+  });
+});
+app.get("/pkinder", (req, res) => {
+  const { stu_id } = req.query;
+  const sql = `SELECT kinder_id FROM class WHERE stu_id = ${stu_id}`;
+  con.query(sql, function (err, kinderResult) {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "An error occurred" });
+    }
+    const kinder_id = kinderResult.map((result) => result.kinder_id);
+    if (kinder_id.length === 0) {
+      return res.status(404).json({ message: "Not found" });
+    }
+
+    const selectStuKinderDataQuery = `SELECT * FROM kindergertenroomlevel WHERE kinder_id IN (${kinder_id.join(
+      ","
+    )})`;
+
+    con.query(selectStuKinderDataQuery, function (err, kinderdata) {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({ message: "An error occurred" });
+      }
+      res.send(kinderdata);
+    });
+  });
+});
 app.get("/student", (req, res) => {
   const sql = "select * from student";
   con.query(sql, function (err, result) {
@@ -1031,8 +1174,40 @@ app.get("/student", (req, res) => {
     res.send(result);
   });
 });
+app.get("/searcstudent", (req, res) => {
+  const { stu_id } = req.query;
+  let sql = "SELECT * FROM student";
+  const params = [];
+  if (stu_id) {
+    sql += " WHERE stu_id = ?";
+    params.push(stu_id);
+  }
+  con.query(sql, params, function (err, result) {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "An error occurred!" });
+    }
+    res.status(200).json({
+      message: "Student data",
+      data: result,
+    });
+  });
+});
 app.get("/subject", (req, res) => {
   const sql = "select * from subject";
+  con.query(sql, function (err, result) {
+    console.log(result);
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ message: "An error!!" });
+    }
+    console.log("Result: " + result);
+    res.send(result);
+  });
+});
+app.get("/selectsubject", (req, res) => {
+  const { sylla_id } = req.query;
+  const sql = `SELECT * FROM subject WHERE sylla_id = ${sylla_id}`;
   con.query(sql, function (err, result) {
     console.log(result);
     if (err) {
@@ -1644,9 +1819,9 @@ app.get("/shownamesyllabus", (req, res) => {
 
     const takesyllabusid = syllabusid.map((result) => result.sylla_id);
     if (takesyllabusid.length === 0) {
-      return res
-        .status(404)
-        .json({ message: "No students found for the given parameters" });
+      return res.status(404).json({
+        message: "No shownamesyllabus found for the given parameters",
+      });
     }
 
     const selectSyllabusname = `SELECT * FROM syllabus WHERE sylla_id = ${takesyllabusid}`;
