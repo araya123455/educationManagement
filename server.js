@@ -951,7 +951,7 @@ app.patch("/subjectscoreupdate/:id", (req, res) => {
   });
 });
 
-//---------Video----------
+//---------insert Video----------
 app.post("/upload/video_links", (req, res) => {
   const { video_detail, video_link, cont_id } = req.body;
   const sql = `INSERT INTO learningmaterialsvideo (video_detail, video_link, cont_id) VALUES ( ? , ?, ? )`;
@@ -1988,6 +1988,7 @@ app.get("/findassessment", (req, res) => {
   });
 });
 
+//irin video
 //------------------------------
 app.get("/learningvideo", (req, res) => {
   const sql = "select * from learningmaterialsvideo where cont_id";
