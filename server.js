@@ -124,6 +124,7 @@ app.post("/kinroominsert", (req, res) => {
   console.log(req.body);
   const { kinde_level, Kinder_room } = req.body;
   const sql = `INSERT INTO kindergertenroomlevel (kinde_level, Kinder_room ) VALUES ( ? , ? )`;
+  console.log(sql);
   con.query(sql, [kinde_level, Kinder_room], function (err, result) {
     if (err) {
       console.error(err);
@@ -215,17 +216,42 @@ app.patch("/teacherupdate/:id", (req, res) => {
     prefix,
     tch_Fname,
     tch_Lname,
+    tch_sn,
+    tch_user,
     tch_pass,
     status,
     tch_sect,
     position_id,
   } = req.body;
 
-  const sql = `UPDATE teacher SET prefix = ?, tch_Fname = ?, tch_Lname = ?, tch_pass = ?, status = ?, tch_sect = ?, position_id = ? WHERE tch_id = ${tch_id}`;
+  const sql = `
+  UPDATE teacher 
+  SET 
+    prefix = ?,
+    tch_Fname = ?,
+    tch_sn = ?,
+    tch_user = ?,
+    tch_Lname = ?,
+    tch_pass = ?,
+    status = ?,
+    tch_sect = ?,
+    position_id = ? 
+  WHERE tch_id = ${tch_id}`;
 
   con.query(
     sql,
-    [prefix, tch_Fname, tch_Lname, tch_pass, status, tch_sect, position_id],
+    [
+      prefix,
+      tch_Fname,
+      tch_sn,
+      tch_user,
+      tch_Lname,
+      tch_pass,
+      status,
+      tch_sect,
+      position_id,
+      tch_id,
+    ],
     function (err, result) {
       if (err) throw err;
       console.log(`Teacher with ID ${tch_id} updated` + result);
@@ -271,11 +297,11 @@ app.post("/classinsert", (req, res) => {
 });
 app.patch("/classupdate/:id", (req, res) => {
   const class_id = req.params.id;
-  const { kinder_id, yearterm_id, stu_id } = req.body;
+  const { kinder_id, yearterm_id, stu_id, crt_id } = req.body;
 
-  const sql = `UPDATE class SET kinder_id = ?, yearterm_id = ?, stu_id = ? WHERE class_id = ${class_id}`;
+  const sql = `UPDATE class SET kinder_id = ?, yearterm_id = ?, stu_id = ?, crt_id = ? WHERE class_id = ${class_id}`;
 
-  con.query(sql, [kinder_id, yearterm_id, stu_id], function (err, result) {
+  con.query(sql, [kinder_id, yearterm_id, stu_id, crt_id], function (err, result) {
     if (err) throw err;
     console.log(`class with ID ${class_id} updated` + result);
 
