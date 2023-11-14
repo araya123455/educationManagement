@@ -974,10 +974,10 @@ app.patch("/subjectscoreupdate/:id", (req, res) => {
         data: updatesubjectscore,
       });
     });
-  });
+  }); 
 });
 
-//---------insert Video----------
+//---------upload Video----------
 app.post("/upload/video_links", (req, res) => {
   const { video_detail, video_link, cont_id } = req.body;
   const sql = `INSERT INTO learningmaterialsvideo (video_detail, video_link, cont_id) VALUES ( ? , ?, ? )`;
